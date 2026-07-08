@@ -1,0 +1,21 @@
+# Go
+/server/bin/
+*.test
+*.out
+
+# Node / Bun
+node_modules/
+/web/dist/
+.env
+.env.local
+
+# Superpowers scratch (progress ledger, briefs, reports)
+.superpowers/
+
+# Planning docs & local config — kept local, not tracked
+/myr-tool-CLAUDE-PLAN.md
+/docs/
+/CLAUDE.md
+
+# OS
+.DS_Store
