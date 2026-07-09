@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"fx-tracker/internal/config"
+	"fx-tracker/internal/fx"
 	"fx-tracker/internal/handler"
 	"fx-tracker/internal/router"
 )
@@ -25,7 +26,13 @@ func main() {
 		log.Fatalf("migrate: %v", err)
 	}
 
-	h := handler.New()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	cache := fx.NewCache(http.DefaultClient, cfg.FxBaseURL)
+	go cache.Run(ctx, 10*time.Minute)
+
+	h := handler.New(cache)
 	r := router.New(h)
 
 	srv := &http.Server{Addr: ":" + cfg.Port, Handler: r}
@@ -37,8 +44,6 @@ func main() {
 		}
 	}()
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 	<-ctx.Done()
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

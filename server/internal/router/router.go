@@ -17,5 +17,7 @@ func New(h *handler.Handler) *gin.Engine {
 	}))
 
 	r.GET("/health", h.Health)
+	r.GET("/api/rate", h.Rate)
+	r.GET("/api/rate/context", h.RateContext)
 	return r
 }
