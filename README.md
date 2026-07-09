@@ -25,7 +25,7 @@ Under active development. Building **Phase 0–1** first: a live MYR/USD FX chec
 Requires Docker, Go 1.22+, and Bun.
 
 ```bash
-# 1. Start Postgres (user/pass/db: myr/myr/myrtool on :5432)
+# 1. Start Postgres (user/pass/db: fx/fx/fxtracker on :5432)
 docker compose up -d
 
 # 2. Backend — API on :8080
