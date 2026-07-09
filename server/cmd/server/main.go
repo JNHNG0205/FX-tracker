@@ -29,7 +29,9 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	cache := fx.NewCache(http.DefaultClient, cfg.FxBaseURL)
+	// 10s timeout so a hung upstream can't stall the refresh loop indefinitely.
+	httpClient := &http.Client{Timeout: 10 * time.Second}
+	cache := fx.NewCache(httpClient, cfg.FxBaseURL)
 	go cache.Run(ctx, 10*time.Minute)
 
 	h := handler.New(cache)
