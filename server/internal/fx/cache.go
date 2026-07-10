@@ -8,23 +8,13 @@ import (
 	"time"
 )
 
-type RangeContext struct {
-	Current    float64   `json:"current_myr_usd"`
-	Min        float64   `json:"min_myr_usd"`
-	Max        float64   `json:"max_myr_usd"`
-	Assessment string    `json:"assessment"`
-	Stale      bool      `json:"stale"`
-	FetchedAt  time.Time `json:"fetched_at"`
-}
-
 type Cache struct {
 	client  *http.Client
 	baseURL string
 
-	mu       sync.RWMutex
-	current  Rate
-	min, max float64
-	hasData  bool
+	mu      sync.RWMutex
+	current Rate
+	hasData bool
 }
 
 func NewCache(client *http.Client, baseURL string) *Cache {
@@ -49,12 +39,6 @@ func (c *Cache) Refresh(ctx context.Context) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.current = rate
-	if !c.hasData || rate.MyrUsd < c.min {
-		c.min = rate.MyrUsd
-	}
-	if !c.hasData || rate.MyrUsd > c.max {
-		c.max = rate.MyrUsd
-	}
 	c.hasData = true
 	return nil
 }
@@ -63,19 +47,6 @@ func (c *Cache) Get() Rate {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.current
-}
-
-func (c *Cache) Context() RangeContext {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return RangeContext{
-		Current:    c.current.MyrUsd,
-		Min:        c.min,
-		Max:        c.max,
-		Assessment: Assess(c.current.MyrUsd, c.min, c.max),
-		Stale:      c.current.Stale,
-		FetchedAt:  c.current.FetchedAt,
-	}
 }
 
 // Run refreshes immediately, then on every tick until ctx is cancelled.

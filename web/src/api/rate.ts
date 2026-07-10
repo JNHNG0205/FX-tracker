@@ -5,13 +5,26 @@ export type Rate = {
   stale: boolean;
 };
 
+export type Verdict = "good" | "middling" | "poor" | "unknown";
+
+export type TimeframeAssessment = {
+  label: string;
+  assessment: Verdict;
+  percentile: number;
+  min: number;
+  max: number;
+  samples: number;
+  start: string;
+  end: string;
+};
+
 export type RateContext = {
   current_myr_usd: number;
-  min_myr_usd: number;
-  max_myr_usd: number;
-  assessment: "good" | "middling" | "poor" | "unknown";
+  current_usd_myr: number;
   stale: boolean;
   fetched_at: string;
+  history_stale: boolean;
+  timeframes: TimeframeAssessment[];
 };
 
 async function getJson<T>(url: string): Promise<T> {

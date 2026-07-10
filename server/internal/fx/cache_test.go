@@ -52,29 +52,7 @@ func TestCacheRefreshAndStale(t *testing.T) {
 	}
 }
 
-func TestCacheContextAssessment(t *testing.T) {
-	var calls atomic.Int32
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		n := calls.Add(1)
-		if n == 1 {
-			_, _ = w.Write([]byte(`{"rates":{"MYR":5.0}}`)) // MyrUsd = 0.20 -> min
-			return
-		}
-		_, _ = w.Write([]byte(`{"rates":{"MYR":4.0}}`)) // MyrUsd = 0.25 -> max, current
-	}))
-	defer srv.Close()
-
-	c := NewCache(srv.Client(), srv.URL)
-	_ = c.Refresh(context.Background())
-	_ = c.Refresh(context.Background())
-
-	ctx := c.Context()
-	if ctx.Assessment != "good" {
-		t.Fatalf("assessment = %q, want good (current at top of range)", ctx.Assessment)
-	}
-}
-
-// TestCacheConcurrentAccess exercises concurrent Refresh/Get/Context calls
+// TestCacheConcurrentAccess exercises concurrent Refresh/Get calls
 // against the shared cache state, for use with `go test -race`.
 func TestCacheConcurrentAccess(t *testing.T) {
 	var calls atomic.Int32
@@ -104,14 +82,13 @@ func TestCacheConcurrentAccess(t *testing.T) {
 		}()
 	}
 
-	// Many readers hammering Get and Context concurrently.
+	// Many readers hammering Get concurrently.
 	for i := 0; i < 8; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for j := 0; j < iterations; j++ {
 				_ = c.Get()
-				_ = c.Context()
 			}
 		}()
 	}
