@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"fx-tracker/internal/fx"
+	"fx-tracker/internal/service"
 )
 
 func newLiveCache(t *testing.T) *fx.Cache {
@@ -41,7 +42,7 @@ func newHistory(t *testing.T) *fx.HistoryCache {
 func TestHealth(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	h := New(newLiveCache(t), newHistory(t))
+	h := New(newLiveCache(t), newHistory(t), service.NewConversionService(&memRepo{}))
 	r.GET("/health", h.Health)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/health", nil))
@@ -53,7 +54,7 @@ func TestHealth(t *testing.T) {
 func TestRate(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	h := New(newLiveCache(t), newHistory(t))
+	h := New(newLiveCache(t), newHistory(t), service.NewConversionService(&memRepo{}))
 	r.GET("/api/rate", h.Rate)
 
 	w := httptest.NewRecorder()
@@ -73,7 +74,7 @@ func TestRate(t *testing.T) {
 func TestRateContext(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	h := New(newLiveCache(t), newHistory(t))
+	h := New(newLiveCache(t), newHistory(t), service.NewConversionService(&memRepo{}))
 	r.GET("/api/rate/context", h.RateContext)
 
 	w := httptest.NewRecorder()

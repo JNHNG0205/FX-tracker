@@ -7,15 +7,17 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"fx-tracker/internal/fx"
+	"fx-tracker/internal/service"
 )
 
 type Handler struct {
 	cache   *fx.Cache
 	history *fx.HistoryCache
+	conv    *service.ConversionService
 }
 
-func New(cache *fx.Cache, history *fx.HistoryCache) *Handler {
-	return &Handler{cache: cache, history: history}
+func New(cache *fx.Cache, history *fx.HistoryCache, conv *service.ConversionService) *Handler {
+	return &Handler{cache: cache, history: history, conv: conv}
 }
 
 func (h *Handler) Health(c *gin.Context) {

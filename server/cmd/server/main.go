@@ -12,7 +12,9 @@ import (
 	"fx-tracker/internal/config"
 	"fx-tracker/internal/fx"
 	"fx-tracker/internal/handler"
+	"fx-tracker/internal/repository"
 	"fx-tracker/internal/router"
+	"fx-tracker/internal/service"
 )
 
 func main() {
@@ -38,7 +40,10 @@ func main() {
 	// Historical series changes at most daily; refresh once a day.
 	go history.Run(ctx, 24*time.Hour)
 
-	h := handler.New(cache, history)
+	convRepo := repository.NewConversionRepository(db)
+	convService := service.NewConversionService(convRepo)
+
+	h := handler.New(cache, history, convService)
 	r := router.New(h)
 
 	srv := &http.Server{Addr: ":" + cfg.Port, Handler: r}
