@@ -41,8 +41,8 @@ export function ConversionsTable() {
               {data.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>{c.date.slice(0, 10)}</TableCell>
-                  <TableCell>{c.myr_amount}</TableCell>
-                  <TableCell>{c.rate_myr_usd}</TableCell>
+                  <TableCell>{c.myr_amount.toFixed(2)}</TableCell>
+                  <TableCell>{c.rate_myr_usd.toFixed(4)}</TableCell>
                   <TableCell>{(c.myr_amount * c.rate_myr_usd).toFixed(2)}</TableCell>
                   <TableCell>{c.note}</TableCell>
                 </TableRow>

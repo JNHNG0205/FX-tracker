@@ -21,7 +21,7 @@ export function BlendedRateCard() {
           <>
             <p className="text-3xl font-bold">{data.blended_rate.toFixed(4)} USD per 1 MYR</p>
             <p className="mt-1 text-sm text-gray-500">
-              {data.total_myr} MYR spent → {data.total_usd} USD acquired
+              {data.total_myr.toFixed(2)} MYR spent → {data.total_usd.toFixed(2)} USD acquired
             </p>
           </>
         )}
