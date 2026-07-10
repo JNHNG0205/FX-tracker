@@ -141,3 +141,14 @@ func (h *HistoryCache) Assess(current float64, asOf time.Time) []Assessment {
 	}
 	return out
 }
+
+// RateContext is the /api/rate/context payload: the live rate plus a
+// per-timeframe historical assessment.
+type RateContext struct {
+	CurrentMyrUsd float64      `json:"current_myr_usd"`
+	CurrentUsdMyr float64      `json:"current_usd_myr"`
+	Stale         bool         `json:"stale"`
+	FetchedAt     time.Time    `json:"fetched_at"`
+	HistoryStale  bool         `json:"history_stale"`
+	Timeframes    []Assessment `json:"timeframes"`
+}

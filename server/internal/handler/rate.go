@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -9,11 +10,12 @@ import (
 )
 
 type Handler struct {
-	cache *fx.Cache
+	cache   *fx.Cache
+	history *fx.HistoryCache
 }
 
-func New(cache *fx.Cache) *Handler {
-	return &Handler{cache: cache}
+func New(cache *fx.Cache, history *fx.HistoryCache) *Handler {
+	return &Handler{cache: cache, history: history}
 }
 
 func (h *Handler) Health(c *gin.Context) {
@@ -25,5 +27,14 @@ func (h *Handler) Rate(c *gin.Context) {
 }
 
 func (h *Handler) RateContext(c *gin.Context) {
-	c.JSON(http.StatusOK, h.cache.Context())
+	rate := h.cache.Get()
+	now := time.Now()
+	c.JSON(http.StatusOK, fx.RateContext{
+		CurrentMyrUsd: rate.MyrUsd,
+		CurrentUsdMyr: rate.UsdMyr,
+		Stale:         rate.Stale,
+		FetchedAt:     rate.FetchedAt,
+		HistoryStale:  h.history.Stale(),
+		Timeframes:    h.history.Assess(rate.MyrUsd, now),
+	})
 }

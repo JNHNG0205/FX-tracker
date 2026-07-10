@@ -34,7 +34,11 @@ func main() {
 	cache := fx.NewCache(httpClient, cfg.FxBaseURL)
 	go cache.Run(ctx, 10*time.Minute)
 
-	h := handler.New(cache)
+	history := fx.NewHistoryCache(httpClient, cfg.FxBaseURL)
+	// Historical series changes at most daily; refresh once a day.
+	go history.Run(ctx, 24*time.Hour)
+
+	h := handler.New(cache, history)
 	r := router.New(h)
 
 	srv := &http.Server{Addr: ":" + cfg.Port, Handler: r}
