@@ -16,7 +16,7 @@ Under active development. Building **Phase 0–1** first: a live MYR/USD FX chec
 ## Tech Stack
 
 - **Backend:** Go 1.22+, Gin, GORM, PostgreSQL
-- **Frontend:** React + Vite + TypeScript (strict), TanStack Query, Tailwind, shadcn/ui
+- **Frontend:** React + Vite + TypeScript (strict), TanStack Query, Tailwind v4, shadcn/ui
 - **Package manager (frontend):** Bun
 - **Local database:** Docker Compose Postgres
 
@@ -45,18 +45,25 @@ bun run dev
 | --- | --- |
 | `GET /health` | `{"status":"ok"}` |
 | `GET /api/rate` | `{ usd_myr, myr_usd, fetched_at, stale }` — mid-market USD/MYR |
-| `GET /api/rate/context` | `{ current_myr_usd, min_myr_usd, max_myr_usd, assessment, stale, fetched_at }` |
-
-## Tests
-
-```bash
-cd server && go test ./... -race
-```
+| `GET /api/rate/context` | live rate + a `timeframes` array (7d/14d/30d/90d/YTD), each with a percentile-based `assessment` |
+| `POST /api/conversions` | log a conversion `{ date?, myr_amount, rate_myr_usd, note? }` (amount & rate must be > 0) |
+| `GET /api/conversions` | conversions, newest first |
+| `GET /api/conversions/status` | blended average rate + DCA compare vs the live rate |
 
 ## Notes
 
 - Rates are mid-market; Moomoo's real quote includes a spread and is slightly worse.
-- The assessment range currently spans only how long the server has run. Real 30/90-day context arrives in Phase 2 via persisted rate samples.
+- The assessment ranks today's rate against frankfurter's historical daily series (business days only), fetched live per timeframe — no local rate history is stored.
+- Money is stored as float for display this phase; Phase 4 tax math will use a decimal type.
+
+## Tests
+
+Repo tests need a `fxtracker_test` database:
+
+```bash
+docker compose exec -T db psql -U fx -d fxtracker -c "CREATE DATABASE fxtracker_test;"
+cd server && go test ./... -race
+```
 
 ## Configuration
 
