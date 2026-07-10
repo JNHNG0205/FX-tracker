@@ -31,6 +31,7 @@ func TestStatus(t *testing.T) {
 		{"no conversions", &fakeRepo{}, 0.24, false, false, 0},
 		{"live beats average", &fakeRepo{rate: 0.20, totalMyr: 1000, totalUsd: 200}, 0.205, true, true, 2.5},
 		{"live below average", &fakeRepo{rate: 0.20, totalMyr: 1000, totalUsd: 200}, 0.195, true, false, -2.5},
+		{"live rate unavailable", &fakeRepo{rate: 0.20, totalMyr: 1000, totalUsd: 200}, 0, false, false, 0},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

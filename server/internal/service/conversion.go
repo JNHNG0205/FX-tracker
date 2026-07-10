@@ -37,6 +37,13 @@ func (s *ConversionService) List(ctx context.Context) ([]model.Conversion, error
 // Status compares the live rate (USD per MYR) to the blended average. A higher
 // live rate means more USD per MYR now than the average cost, i.e. beats_avg.
 func (s *ConversionService) Status(ctx context.Context, liveRate float64) (DCAStatus, error) {
+	// A non-positive liveRate means we haven't fetched a live FX rate yet
+	// (cold start) or the FX source was down at boot — there's nothing to
+	// compare the blended average against, so signal "no comparison" rather
+	// than a misleading -100% delta.
+	if liveRate <= 0 {
+		return DCAStatus{HasData: false, LiveRate: liveRate}, nil
+	}
 	blended, totalMyr, totalUsd, err := s.repo.BlendedRate(ctx)
 	if err != nil {
 		return DCAStatus{}, err
