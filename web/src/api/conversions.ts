@@ -66,6 +66,7 @@ export async function updateConversion(id: number, body: NewConversion): Promise
 export async function deleteConversion(id: number): Promise<void> {
   const res = await fetch(`/api/conversions/${id}`, { method: "DELETE" });
   if (!res.ok) {
-    throw new Error(`request failed: ${res.status}`);
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error ?? `request failed: ${res.status}`);
   }
 }

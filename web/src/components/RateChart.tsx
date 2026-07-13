@@ -11,12 +11,18 @@ export function RateChart({ points, live }: { points: RatePoint[]; live: number 
     return <p className="mt-3 text-sm text-muted-foreground">No historical data for this window yet.</p>;
   }
   const lastDate = points[points.length - 1].date;
+  const values = points.map((p) => p.myr_usd).concat(live != null ? [live] : []);
+  const rawMin = Math.min(...values);
+  const rawMax = Math.max(...values);
+  const range = rawMax - rawMin;
+  const padding = range > 0 ? range * 0.02 : 0.0001;
+  const domain: [number, number] = [rawMin - padding, rawMax + padding];
   return (
     <ChartContainer config={config} className="mt-3 h-40 w-full">
       <LineChart data={points} margin={{ left: 4, right: 8, top: 8, bottom: 4 }}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="date" tickFormatter={(d: string) => d.slice(5)} tickMargin={8} minTickGap={24} />
-        <YAxis domain={["auto", "auto"]} width={52} tickFormatter={(v: number) => v.toFixed(4)} />
+        <YAxis domain={domain} width={52} tickFormatter={(v: number) => v.toFixed(4)} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <Line dataKey="myr_usd" type="monotone" stroke="var(--color-myr_usd)" dot={false} strokeWidth={2} />
         {live != null && (
@@ -25,7 +31,7 @@ export function RateChart({ points, live }: { points: RatePoint[]; live: number 
             y={live}
             r={4}
             fill="var(--color-myr_usd)"
-            stroke="white"
+            stroke="var(--background)"
             label={{ value: "now", position: "top", fontSize: 10 }}
           />
         )}

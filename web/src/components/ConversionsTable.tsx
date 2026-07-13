@@ -69,7 +69,7 @@ function EditDialog({ conversion }: { conversion: Conversion }) {
             <Label htmlFor={`note-${conversion.id}`}>Note</Label>
             <Input id={`note-${conversion.id}`} value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
-          {mutation.isError && <p className="text-sm text-red-600">{(mutation.error as Error).message}</p>}
+          {mutation.isError && <p className="text-sm text-red-600">{mutation.error.message}</p>}
           <DialogFooter>
             <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
             <Button type="submit" disabled={!valid || mutation.isPending}>
