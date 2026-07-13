@@ -96,3 +96,27 @@ func TestRateContext(t *testing.T) {
 		t.Fatalf("first timeframe = %q", ctx.Timeframes[0].Label)
 	}
 }
+
+func TestRateHistory(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	h := New(newLiveCache(t), newHistory(t), service.NewConversionService(&memRepo{}))
+	r.GET("/api/rate/history", h.RateHistory)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/rate/history", nil))
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d", w.Code)
+	}
+	var body fx.RateHistory
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	// newHistory seeds two business days.
+	if len(body.Points) != 2 {
+		t.Fatalf("points = %d, want 2", len(body.Points))
+	}
+	if body.Points[0].Date == "" || body.Points[0].MyrUsd == 0 {
+		t.Fatalf("point not populated: %+v", body.Points[0])
+	}
+}
