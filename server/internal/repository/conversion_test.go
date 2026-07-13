@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 	"time"
@@ -70,5 +71,47 @@ func TestBlendedRate(t *testing.T) {
 	}
 	if rate != 0.25 || tm != 2000 || tu != 500 {
 		t.Fatalf("blended = (rate %v, myr %v, usd %v), want (0.25, 2000, 500)", rate, tm, tu)
+	}
+}
+
+func TestUpdateAndDelete(t *testing.T) {
+	repo := NewConversionRepository(testDB(t))
+	ctx := context.Background()
+
+	c := &model.Conversion{Date: time.Now(), MyrAmount: 1000, RateMyrUsd: 0.22, Note: "orig"}
+	if err := repo.Create(ctx, c); err != nil {
+		t.Fatal(err)
+	}
+
+	// Update existing.
+	c.MyrAmount = 1500
+	c.RateMyrUsd = 0.24
+	c.Note = "fixed"
+	if err := repo.Update(ctx, c); err != nil {
+		t.Fatalf("update: %v", err)
+	}
+	list, _ := repo.List(ctx)
+	if len(list) != 1 || list[0].MyrAmount != 1500 || list[0].Note != "fixed" || list[0].RateMyrUsd != 0.24 {
+		t.Fatalf("update not applied: %+v", list)
+	}
+
+	// Update missing id.
+	missing := &model.Conversion{ID: 99999, MyrAmount: 1, RateMyrUsd: 1}
+	if err := repo.Update(ctx, missing); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("update missing: got %v, want ErrRecordNotFound", err)
+	}
+
+	// Delete existing.
+	if err := repo.Delete(ctx, c.ID); err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+	list, _ = repo.List(ctx)
+	if len(list) != 0 {
+		t.Fatalf("delete not applied: %+v", list)
+	}
+
+	// Delete missing id.
+	if err := repo.Delete(ctx, 99999); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("delete missing: got %v, want ErrRecordNotFound", err)
 	}
 }
