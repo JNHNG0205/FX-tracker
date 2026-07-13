@@ -102,6 +102,28 @@ func (h *HistoryCache) Stale() bool {
 	return h.stale
 }
 
+// Points returns a copy of the cached daily series (ascending by date). A copy
+// so callers can't mutate the cache; read lock never blocks on the network.
+func (h *HistoryCache) Points() []HistPoint {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	out := make([]HistPoint, len(h.points))
+	copy(out, h.points)
+	return out
+}
+
+// Point is one day of the series in the /api/rate/history payload.
+type Point struct {
+	Date   string  `json:"date"`
+	MyrUsd float64 `json:"myr_usd"`
+}
+
+// RateHistory is the /api/rate/history payload.
+type RateHistory struct {
+	Points []Point `json:"points"`
+	Stale  bool    `json:"stale"`
+}
+
 // Assess ranks current against each timeframe's window, sliced from the cached
 // series. Never blocks on the network (read lock only).
 func (h *HistoryCache) Assess(current float64, asOf time.Time) []Assessment {

@@ -40,3 +40,12 @@ func (h *Handler) RateContext(c *gin.Context) {
 		Timeframes:    h.history.Assess(rate.MyrUsd, now),
 	})
 }
+
+func (h *Handler) RateHistory(c *gin.Context) {
+	pts := h.history.Points()
+	out := make([]fx.Point, 0, len(pts))
+	for _, p := range pts {
+		out = append(out, fx.Point{Date: p.Date.Format("2006-01-02"), MyrUsd: p.MyrUsd})
+	}
+	c.JSON(http.StatusOK, fx.RateHistory{Points: out, Stale: h.history.Stale()})
+}

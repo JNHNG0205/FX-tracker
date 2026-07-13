@@ -42,3 +42,17 @@ export function fetchRate(): Promise<Rate> {
 export function fetchRateContext(): Promise<RateContext> {
   return getJson<RateContext>("/api/rate/context");
 }
+
+export type RatePoint = {
+  date: string;
+  myr_usd: number;
+};
+
+export type RateHistory = {
+  points: RatePoint[];
+  stale: boolean;
+};
+
+export function fetchRateHistory(): Promise<RateHistory> {
+  return getJson<RateHistory>("/api/rate/history");
+}

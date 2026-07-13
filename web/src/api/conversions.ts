@@ -49,3 +49,24 @@ export async function createConversion(body: NewConversion): Promise<Conversion>
   }
   return (await res.json()) as Conversion;
 }
+
+export async function updateConversion(id: number, body: NewConversion): Promise<Conversion> {
+  const res = await fetch(`/api/conversions/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error ?? `request failed: ${res.status}`);
+  }
+  return (await res.json()) as Conversion;
+}
+
+export async function deleteConversion(id: number): Promise<void> {
+  const res = await fetch(`/api/conversions/${id}`, { method: "DELETE" });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error ?? `request failed: ${res.status}`);
+  }
+}

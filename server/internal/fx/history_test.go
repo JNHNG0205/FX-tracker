@@ -75,3 +75,28 @@ func TestHistoryCacheStaleAndEmpty(t *testing.T) {
 		t.Fatalf("expected unknown/empty timeframes, got %+v", got[0])
 	}
 }
+
+func TestHistoryCachePointsReturnsCopy(t *testing.T) {
+	body := `{"rates":{"2026-07-07":{"MYR":4.80},"2026-07-08":{"MYR":4.90}}}`
+	srv := seriesServer(t, body)
+	c := NewHistoryCache(srv.Client(), srv.URL)
+	c.Now = func() time.Time { return mustDate("2026-07-09") }
+	if err := c.Refresh(context.Background()); err != nil {
+		t.Fatalf("refresh: %v", err)
+	}
+
+	pts := c.Points()
+	if len(pts) != 2 {
+		t.Fatalf("len = %d, want 2", len(pts))
+	}
+	// ascending by date
+	if !pts[0].Date.Before(pts[1].Date) {
+		t.Fatalf("points not ascending: %+v", pts)
+	}
+	// mutating the returned slice must not affect the cache
+	pts[0].MyrUsd = -999
+	again := c.Points()
+	if again[0].MyrUsd == -999 {
+		t.Fatalf("Points() leaked the internal slice; mutation bled through")
+	}
+}

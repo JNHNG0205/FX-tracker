@@ -14,6 +14,8 @@ type ConversionRepository interface {
 	// BlendedRate returns total USD acquired / total MYR spent (USD per MYR),
 	// plus the totals. Zeros (no error) when there are no conversions.
 	BlendedRate(ctx context.Context) (rate, totalMyr, totalUsd float64, err error)
+	Update(ctx context.Context, c *model.Conversion) error
+	Delete(ctx context.Context, id uint) error
 }
 
 type conversionRepo struct {
@@ -49,4 +51,35 @@ func (r *conversionRepo) BlendedRate(ctx context.Context) (rate, totalMyr, total
 		rate = res.TotalUsd / res.TotalMyr
 	}
 	return rate, res.TotalMyr, res.TotalUsd, nil
+}
+
+// Update uses a map (not a struct) so zero-valued fields — e.g. an emptied
+// note — still persist; struct-based Updates skips zero values.
+func (r *conversionRepo) Update(ctx context.Context, c *model.Conversion) error {
+	res := r.db.WithContext(ctx).Model(&model.Conversion{}).
+		Where("id = ?", c.ID).
+		Updates(map[string]any{
+			"date":         c.Date,
+			"myr_amount":   c.MyrAmount,
+			"rate_myr_usd": c.RateMyrUsd,
+			"note":         c.Note,
+		})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *conversionRepo) Delete(ctx context.Context, id uint) error {
+	res := r.db.WithContext(ctx).Delete(&model.Conversion{}, id)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }

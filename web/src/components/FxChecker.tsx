@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchRate, fetchRateContext, type Verdict } from "@/api/rate";
+import { fetchRate, fetchRateContext, fetchRateHistory, type Verdict } from "@/api/rate";
 import {
   Card,
   CardHeader,
@@ -9,6 +9,8 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { sliceByTimeframe } from "@/lib/timeframes";
+import { RateChart } from "@/components/RateChart";
 
 const assessmentLabel: Record<Verdict, string> = {
   good: "Good time to convert",
@@ -35,6 +37,7 @@ export function FxChecker() {
     queryFn: fetchRateContext,
     refetchInterval: 60_000,
   });
+  const history = useQuery({ queryKey: ["rateHistory"], queryFn: fetchRateHistory, refetchInterval: 60_000 });
 
   if (rate.isLoading) return <p>Loading rate…</p>;
   if (rate.isError || !rate.data) return <p>Failed to load rate.</p>;
@@ -84,6 +87,10 @@ export function FxChecker() {
               <p className="text-xs text-gray-400">Few data points — read with caution.</p>
             )}
           </div>
+        )}
+
+        {history.data && (
+          <RateChart points={sliceByTimeframe(history.data.points, selectedTimeframe)} live={r.myr_usd} />
         )}
 
         {r.stale && (

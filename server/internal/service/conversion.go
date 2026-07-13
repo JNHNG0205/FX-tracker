@@ -34,6 +34,14 @@ func (s *ConversionService) List(ctx context.Context) ([]model.Conversion, error
 	return s.repo.List(ctx)
 }
 
+func (s *ConversionService) Update(ctx context.Context, c *model.Conversion) error {
+	return s.repo.Update(ctx, c)
+}
+
+func (s *ConversionService) Delete(ctx context.Context, id uint) error {
+	return s.repo.Delete(ctx, id)
+}
+
 // Status compares the live rate (USD per MYR) to the blended average. A higher
 // live rate means more USD per MYR now than the average cost, i.e. beats_avg.
 func (s *ConversionService) Status(ctx context.Context, liveRate float64) (DCAStatus, error) {
