@@ -49,12 +49,16 @@ bun run dev
 | `POST /api/conversions` | log a conversion `{ date?, myr_amount, rate_myr_usd, note? }` (amount & rate must be > 0) |
 | `GET /api/conversions` | conversions, newest first |
 | `GET /api/conversions/status` | blended average rate + DCA compare vs the live rate |
+| `GET /api/rate/history` | `{ points: [{date, myr_usd}], stale }` — daily USD/MYR series for the chart |
+| `PUT /api/conversions/:id` | edit a conversion (validated; 404 if absent) |
+| `DELETE /api/conversions/:id` | delete a conversion (204; 404 if absent) |
 
 ## Notes
 
 - Rates are mid-market; Moomoo's real quote includes a spread and is slightly worse.
 - The assessment ranks today's rate against frankfurter's historical daily series (business days only), fetched live per timeframe — no local rate history is stored.
 - Money is stored as float for display this phase; Phase 4 tax math will use a decimal type.
+- The FX card shows a chart of MYR→USD over the selected timeframe (frankfurter daily closes) with the live rate marked; conversions can be edited or deleted from the history table.
 
 ## Tests
 
