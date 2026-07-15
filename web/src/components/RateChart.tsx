@@ -30,13 +30,13 @@ export function RateChart({ points, live }: { points: RatePoint[]; live: number 
           <XAxis dataKey="date" tickFormatter={(d: string) => d.slice(5)} tickMargin={8} minTickGap={24} />
           <YAxis domain={domain} width={52} tickFormatter={(v: number) => v.toFixed(4)} />
           <ChartTooltip content={<ChartTooltipContent />} />
-          <Line dataKey="myr_usd" type="monotone" stroke="var(--color-foreground)" dot={false} strokeWidth={2} />
+          <Line dataKey="myr_usd" type="monotone" stroke="var(--color-primary)" dot={false} strokeWidth={2} />
           {live != null && (
             <ReferenceDot
               x={lastDate}
               y={live}
               r={4}
-              fill="var(--color-primary)"
+              fill="var(--color-foreground)"
               stroke="var(--color-background)"
               label={{ value: "now", position: "top", fontSize: 10 }}
             />
