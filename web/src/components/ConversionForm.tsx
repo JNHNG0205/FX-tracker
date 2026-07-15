@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import { createConversion } from "@/api/conversions";
 import { fetchRate } from "@/api/rate";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -15,6 +15,14 @@ export function ConversionForm() {
   const [myrAmount, setMyrAmount] = useState("");
   const [rate, setRate] = useState("");
   const [note, setNote] = useState("");
+  const [justSaved, setJustSaved] = useState(false);
+  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+    };
+  }, []);
 
   const liveRate = useQuery({ queryKey: ["rate"], queryFn: fetchRate });
 
@@ -26,6 +34,9 @@ export function ConversionForm() {
       setNote("");
       queryClient.invalidateQueries({ queryKey: ["conversions"] });
       queryClient.invalidateQueries({ queryKey: ["dcaStatus"] });
+      setJustSaved(true);
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+      savedTimeoutRef.current = setTimeout(() => setJustSaved(false), 2500);
     },
   });
 
@@ -101,6 +112,12 @@ export function ConversionForm() {
           </Button>
           {mutation.isError && (
             <p className="text-sm text-negative">{mutation.error.message}</p>
+          )}
+          {justSaved && (
+            <p className="flex items-center gap-1.5 text-sm text-positive motion-safe:animate-in motion-safe:fade-in">
+              <Check className="size-4" aria-hidden="true" />
+              Saved
+            </p>
           )}
         </form>
       </CardContent>

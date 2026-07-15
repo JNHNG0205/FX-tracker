@@ -93,7 +93,7 @@ function DeleteButton({ id }: { id: number }) {
   });
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button variant="outline" size="sm" />}>Delete</AlertDialogTrigger>
+      <AlertDialogTrigger render={<Button variant="destructive" size="sm" />}>Delete</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete this conversion?</AlertDialogTitle>
