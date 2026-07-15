@@ -31,7 +31,7 @@ export function DcaIndicator() {
           {data.beats_avg ? "better" : "worse"} than your average
         </p>
         <p className="mt-2 text-sm text-muted-foreground tabular-nums">
-          Live {data.live_rate.toFixed(4)} vs blended {data.blended_rate.toFixed(4)} (USD per MYR)
+          Live {data.live_rate.toFixed(4)} vs blended {data.blended_rate.toFixed(4)} (USD per 1 MYR)
         </p>
       </CardContent>
     </Card>

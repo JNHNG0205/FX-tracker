@@ -69,7 +69,7 @@ export function ConversionForm() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="rate">Rate received (USD per MYR)</Label>
+            <Label htmlFor="rate">Rate received (USD per 1 MYR)</Label>
             <Input
               id="rate"
               type="number"

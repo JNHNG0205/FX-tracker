@@ -28,6 +28,16 @@ const verdictPresentation: Record<Verdict, VerdictPresentation> = {
 
 const timeframeLabels = ["7d", "14d", "30d", "90d", "YTD"] as const;
 
+function formatFreshness(fetchedAt: string): string {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(fetchedAt).getTime()) / 1000));
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ago`;
+}
+
 function FxCheckerSkeleton() {
   return (
     <Card className="w-full">
@@ -90,6 +100,7 @@ export function FxChecker() {
         <p className="mt-1 text-sm text-muted-foreground tabular-nums">
           USD → MYR: {r.usd_myr.toFixed(4)} MYR per 1 USD
         </p>
+        <p className="mt-1 text-xs text-muted-foreground">Updated {formatFreshness(r.fetched_at)}</p>
 
         <ToggleGroup
           className="mt-4"
