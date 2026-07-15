@@ -9,19 +9,21 @@ import (
 )
 
 type Rate struct {
-	UsdMyr    float64   `json:"usd_myr"`
-	MyrUsd    float64   `json:"myr_usd"`
+	From      string    `json:"from"`
+	To        string    `json:"to"`
+	Rate      float64   `json:"rate"`    // target per 1 home
+	Inverse   float64   `json:"inverse"` // home per 1 target
 	FetchedAt time.Time `json:"fetched_at"`
 	Stale     bool      `json:"stale"`
 }
 
-// frankfurterResp mirrors https://api.frankfurter.app/latest?from=USD&to=MYR
-type frankfurterResp struct {
+// latestResp mirrors https://api.frankfurter.app/latest?from=MYR&to=USD
+type latestResp struct {
 	Rates map[string]float64 `json:"rates"`
 }
 
-func Fetch(ctx context.Context, client *http.Client, baseURL string) (Rate, error) {
-	url := baseURL + "/latest?from=USD&to=MYR"
+func Fetch(ctx context.Context, client *http.Client, baseURL, from, to string) (Rate, error) {
+	url := fmt.Sprintf("%s/latest?from=%s&to=%s", baseURL, from, to)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return Rate{}, err
@@ -36,18 +38,20 @@ func Fetch(ctx context.Context, client *http.Client, baseURL string) (Rate, erro
 		return Rate{}, fmt.Errorf("fx upstream: status %d", resp.StatusCode)
 	}
 
-	var parsed frankfurterResp
+	var parsed latestResp
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
 		return Rate{}, err
 	}
-	usdMyr, ok := parsed.Rates["MYR"]
-	if !ok || usdMyr <= 0 {
-		return Rate{}, fmt.Errorf("fx upstream: missing or invalid MYR rate")
+	v, ok := parsed.Rates[to]
+	if !ok || v <= 0 {
+		return Rate{}, fmt.Errorf("fx upstream: missing or invalid rate for %s", to)
 	}
 
 	return Rate{
-		UsdMyr:    usdMyr,
-		MyrUsd:    1.0 / usdMyr,
+		From:      from,
+		To:        to,
+		Rate:      v,
+		Inverse:   1.0 / v,
 		FetchedAt: time.Now(),
 	}, nil
 }
