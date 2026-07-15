@@ -30,7 +30,7 @@ const timeframeLabels = ["7d", "14d", "30d", "90d", "YTD"] as const;
 
 function FxCheckerSkeleton() {
   return (
-    <Card className="max-w-md">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>MYR → USD</CardTitle>
         <CardDescription>Live mid-market exchange rate</CardDescription>
@@ -60,7 +60,7 @@ export function FxChecker() {
 
   if (rate.isError || !rate.data) {
     return (
-      <Card className="max-w-md">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>MYR → USD</CardTitle>
           <CardDescription>Live mid-market exchange rate</CardDescription>
@@ -79,7 +79,7 @@ export function FxChecker() {
   const VerdictIcon = verdict?.icon;
 
   return (
-    <Card className="max-w-md">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>MYR → USD</CardTitle>
         <CardDescription>Live mid-market exchange rate</CardDescription>

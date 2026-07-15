@@ -112,7 +112,7 @@ export function ConversionsTable() {
   const { data, isLoading } = useQuery({ queryKey: ["conversions"], queryFn: fetchConversions });
 
   return (
-    <Card className="max-w-3xl">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>History</CardTitle>
       </CardHeader>

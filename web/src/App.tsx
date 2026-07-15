@@ -6,16 +6,27 @@ import { ConversionsTable } from "@/components/ConversionsTable";
 
 export default function App() {
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <h1 className="mb-6 text-2xl font-bold">MYR → USD Tool</h1>
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap gap-6">
-          <FxChecker />
-          <BlendedRateCard />
-          <DcaIndicator />
-          <ConversionForm />
+    <main className="min-h-screen bg-muted/30">
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <h1 className="text-2xl font-bold tracking-tight">MYR → USD Tool</h1>
+        <p className="mt-1 text-muted-foreground">
+          The MYR + FX + tax layer your broker skips.
+        </p>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <FxChecker />
+          </div>
+          <div className="flex flex-col gap-6">
+            <BlendedRateCard />
+            <DcaIndicator />
+          </div>
         </div>
-        <ConversionsTable />
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <ConversionForm />
+          <ConversionsTable />
+        </div>
       </div>
     </main>
   );

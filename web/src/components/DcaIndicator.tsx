@@ -16,7 +16,7 @@ export function DcaIndicator() {
   const DeltaIcon = data.beats_avg ? TrendingUp : TrendingDown;
 
   return (
-    <Card className="max-w-md">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>DCA Check</CardTitle>
       </CardHeader>

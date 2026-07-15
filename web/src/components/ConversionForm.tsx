@@ -39,7 +39,7 @@ export function ConversionForm() {
   }
 
   return (
-    <Card className="max-w-md">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Log a Conversion</CardTitle>
       </CardHeader>

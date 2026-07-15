@@ -10,7 +10,7 @@ export function BlendedRateCard() {
   });
 
   return (
-    <Card className="max-w-md">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Blended Rate</CardTitle>
       </CardHeader>
