@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { fetchDcaStatus } from "@/api/conversions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -11,7 +12,8 @@ export function DcaIndicator() {
 
   if (!data?.has_data) return null;
 
-  const deltaColor = data.beats_avg ? "text-green-600" : "text-red-600";
+  const deltaColor = data.beats_avg ? "text-positive" : "text-negative";
+  const DeltaIcon = data.beats_avg ? TrendingUp : TrendingDown;
 
   return (
     <Card className="max-w-md">
@@ -19,11 +21,15 @@ export function DcaIndicator() {
         <CardTitle>DCA Check</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className={`font-medium ${deltaColor}`}>
-          Today is {Math.abs(data.delta_pct).toFixed(1)}%{" "}
+        <p className={`flex items-center gap-1.5 font-medium ${deltaColor}`}>
+          <DeltaIcon className="size-4" aria-hidden="true" />
+          Today is{" "}
+          <span className="font-semibold tabular-nums">
+            {Math.abs(data.delta_pct).toFixed(1)}%
+          </span>{" "}
           {data.beats_avg ? "better" : "worse"} than your average
         </p>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-muted-foreground tabular-nums">
           Live {data.live_rate.toFixed(4)} vs blended {data.blended_rate.toFixed(4)} (USD per MYR)
         </p>
       </CardContent>
