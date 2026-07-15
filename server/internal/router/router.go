@@ -20,6 +20,7 @@ func New(h *handler.Handler) *gin.Engine {
 	r.GET("/api/rate", h.Rate)
 	r.GET("/api/rate/context", h.RateContext)
 	r.GET("/api/rate/history", h.RateHistory)
+	r.GET("/api/currencies", h.Currencies)
 
 	r.POST("/api/conversions", h.CreateConversion)
 	r.GET("/api/conversions", h.ListConversions)
