@@ -38,6 +38,9 @@
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
+    --color-positive: var(--positive);
+    --color-caution: var(--caution);
+    --color-negative: var(--negative);
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -80,6 +83,9 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+    --positive: oklch(0.52 0.13 150);
+    --caution: oklch(0.52 0.11 70);
+    --negative: oklch(0.55 0.20 27);
 }
 
 .dark {
@@ -114,6 +120,9 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+    --positive: oklch(0.72 0.15 150);
+    --caution: oklch(0.80 0.13 80);
+    --negative: oklch(0.70 0.19 27);
 }
 
 @layer base {

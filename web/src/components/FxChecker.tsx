@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, Info, Minus, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
 import { fetchRate, fetchRateContext, fetchRateHistory, type Verdict } from "@/api/rate";
 import {
   Card,
@@ -12,21 +13,37 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { sliceByTimeframe } from "@/lib/timeframes";
 import { RateChart } from "@/components/RateChart";
 
-const assessmentLabel: Record<Verdict, string> = {
-  good: "Good time to convert",
-  middling: "Middling",
-  poor: "Poor time to convert",
-  unknown: "Not enough data yet",
+type VerdictPresentation = {
+  label: string;
+  colorClass: string;
+  icon: LucideIcon;
 };
 
-const assessmentColor: Record<Verdict, string> = {
-  good: "text-green-600",
-  middling: "text-amber-600",
-  poor: "text-red-600",
-  unknown: "text-gray-500",
+const verdictPresentation: Record<Verdict, VerdictPresentation> = {
+  good: { label: "Good time to convert", colorClass: "text-positive", icon: TrendingUp },
+  middling: { label: "Middling", colorClass: "text-caution", icon: Minus },
+  poor: { label: "Poor time to convert", colorClass: "text-negative", icon: TrendingDown },
+  unknown: { label: "Not enough data yet", colorClass: "text-muted-foreground", icon: Info },
 };
 
 const timeframeLabels = ["7d", "14d", "30d", "90d", "YTD"] as const;
+
+function FxCheckerSkeleton() {
+  return (
+    <Card className="max-w-md">
+      <CardHeader>
+        <CardTitle>MYR → USD</CardTitle>
+        <CardDescription>Live mid-market exchange rate</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-10 w-48 rounded bg-muted motion-safe:animate-pulse" />
+        <div className="mt-2 h-4 w-40 rounded bg-muted motion-safe:animate-pulse" />
+        <div className="mt-4 h-8 w-56 rounded bg-muted motion-safe:animate-pulse" />
+        <div className="mt-4 h-5 w-44 rounded bg-muted motion-safe:animate-pulse" />
+      </CardContent>
+    </Card>
+  );
+}
 
 export function FxChecker() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("30d");
@@ -39,11 +56,27 @@ export function FxChecker() {
   });
   const history = useQuery({ queryKey: ["rateHistory"], queryFn: fetchRateHistory, refetchInterval: 60_000 });
 
-  if (rate.isLoading) return <p>Loading rate…</p>;
-  if (rate.isError || !rate.data) return <p>Failed to load rate.</p>;
+  if (rate.isLoading) return <FxCheckerSkeleton />;
+
+  if (rate.isError || !rate.data) {
+    return (
+      <Card className="max-w-md">
+        <CardHeader>
+          <CardTitle>MYR → USD</CardTitle>
+          <CardDescription>Live mid-market exchange rate</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-negative font-semibold">Couldn't load the rate.</p>
+          <p className="mt-1 text-sm text-muted-foreground">It'll retry automatically.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const r = rate.data;
   const selected = ctx.data?.timeframes.find((t) => t.label === selectedTimeframe);
+  const verdict = selected ? verdictPresentation[selected.assessment] : null;
+  const VerdictIcon = verdict?.icon;
 
   return (
     <Card className="max-w-md">
@@ -52,8 +85,11 @@ export function FxChecker() {
         <CardDescription>Live mid-market exchange rate</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-3xl font-bold">{r.myr_usd.toFixed(4)} USD per 1 MYR</p>
-        <p className="text-sm text-gray-500">USD → MYR: {r.usd_myr.toFixed(4)} MYR per 1 USD</p>
+        <p className="text-4xl font-bold tracking-tight tabular-nums">{r.myr_usd.toFixed(4)}</p>
+        <p className="text-sm text-muted-foreground">USD per 1 MYR</p>
+        <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+          USD → MYR: {r.usd_myr.toFixed(4)} MYR per 1 USD
+        </p>
 
         <ToggleGroup
           className="mt-4"
@@ -71,20 +107,21 @@ export function FxChecker() {
           ))}
         </ToggleGroup>
 
-        {selected && (
+        {selected && verdict && VerdictIcon && (
           <div className="mt-3">
-            <p className={`font-medium ${assessmentColor[selected.assessment]}`}>
-              {assessmentLabel[selected.assessment]}
+            <p className={`flex items-center gap-1.5 text-base font-semibold ${verdict.colorClass}`}>
+              <VerdictIcon className="size-4" aria-hidden="true" />
+              {verdict.label}
             </p>
             {selected.samples > 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Beats {selected.percentile}% of the last {selected.label} ({selected.samples} days)
               </p>
             ) : (
-              <p className="text-sm text-gray-500">No historical data for this window yet.</p>
+              <p className="text-sm text-muted-foreground">No historical data for this window yet.</p>
             )}
             {selected.samples > 0 && selected.samples <= 5 && (
-              <p className="text-xs text-gray-400">Few data points — read with caution.</p>
+              <p className="text-xs text-muted-foreground">Few data points — read with caution.</p>
             )}
           </div>
         )}
@@ -94,16 +131,20 @@ export function FxChecker() {
         )}
 
         {r.stale && (
-          <p className="mt-2 text-sm text-amber-600">
+          <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-caution">
+            <AlertTriangle className="size-4" aria-hidden="true" />
             Showing last known rate — a refresh failed.
           </p>
         )}
 
         {ctx.data?.history_stale && (
-          <p className="mt-1 text-xs text-gray-400">Historical data may be delayed.</p>
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <AlertTriangle className="size-3" aria-hidden="true" />
+            Historical data may be delayed.
+          </p>
         )}
 
-        <p className="mt-4 text-xs text-gray-400">
+        <p className="mt-4 text-xs text-muted-foreground">
           Mid-market rate. Moomoo's real quote includes a spread, so it is slightly worse than
           this.
         </p>
