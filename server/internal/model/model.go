@@ -18,3 +18,10 @@ type Holding struct {
 	AvgCostUsd float64   `json:"avg_cost_usd"`
 	CreatedAt  time.Time `json:"created_at"`
 }
+
+// Setting is a single-row table (fixed ID 1) holding app-wide preferences,
+// currently just the user's home currency.
+type Setting struct {
+	ID           uint   `gorm:"primaryKey" json:"id"`
+	HomeCurrency string `json:"home_currency"`
+}

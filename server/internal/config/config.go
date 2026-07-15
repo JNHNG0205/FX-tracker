@@ -28,7 +28,7 @@ func Connect(cfg Config) (*gorm.DB, error) {
 }
 
 func Migrate(db *gorm.DB) error {
-	return db.AutoMigrate(&model.Conversion{}, &model.Holding{})
+	return db.AutoMigrate(&model.Conversion{}, &model.Holding{}, &model.Setting{})
 }
 
 func env(key, fallback string) string {
