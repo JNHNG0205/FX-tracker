@@ -21,15 +21,16 @@ export function DcaIndicator() {
         <CardTitle>DCA Check</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className={`flex items-center gap-1.5 font-medium ${deltaColor}`}>
-          <DeltaIcon className="size-4" aria-hidden="true" />
-          Today is{" "}
-          <span className="font-semibold tabular-nums">
+        <div className={`flex items-center gap-2 ${deltaColor}`}>
+          <DeltaIcon className="size-6" aria-hidden="true" />
+          <span className="text-3xl font-bold tabular-nums">
             {Math.abs(data.delta_pct).toFixed(1)}%
-          </span>{" "}
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground">
           {data.beats_avg ? "better" : "worse"} than your average
         </p>
-        <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+        <p className="mt-2 text-sm text-muted-foreground tabular-nums">
           Live {data.live_rate.toFixed(4)} vs blended {data.blended_rate.toFixed(4)} (USD per MYR)
         </p>
       </CardContent>
