@@ -69,7 +69,7 @@ function EditDialog({ conversion }: { conversion: Conversion }) {
             <Label htmlFor={`note-${conversion.id}`}>Note</Label>
             <Input id={`note-${conversion.id}`} value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
-          {mutation.isError && <p className="text-sm text-red-600">{mutation.error.message}</p>}
+          {mutation.isError && <p className="text-sm text-negative">{mutation.error.message}</p>}
           <DialogFooter>
             <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
             <Button type="submit" disabled={!valid || mutation.isPending}>
@@ -93,7 +93,7 @@ function DeleteButton({ id }: { id: number }) {
   });
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button variant="outline" size="sm" />}>Delete</AlertDialogTrigger>
+      <AlertDialogTrigger render={<Button variant="destructive" size="sm" />}>Delete</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete this conversion?</AlertDialogTitle>
@@ -112,7 +112,7 @@ export function ConversionsTable() {
   const { data, isLoading } = useQuery({ queryKey: ["conversions"], queryFn: fetchConversions });
 
   return (
-    <Card className="max-w-3xl">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>History</CardTitle>
       </CardHeader>
@@ -137,10 +137,15 @@ export function ConversionsTable() {
               {data.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>{c.date.slice(0, 10)}</TableCell>
-                  <TableCell>{c.myr_amount.toFixed(2)}</TableCell>
-                  <TableCell>{c.rate_myr_usd.toFixed(4)}</TableCell>
-                  <TableCell>{(c.myr_amount * c.rate_myr_usd).toFixed(2)}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.note}</TableCell>
+                  <TableCell className="tabular-nums">{c.myr_amount.toFixed(2)}</TableCell>
+                  <TableCell className="tabular-nums">{c.rate_myr_usd.toFixed(4)}</TableCell>
+                  <TableCell className="tabular-nums">{(c.myr_amount * c.rate_myr_usd).toFixed(2)}</TableCell>
+                  <TableCell
+                    className="max-w-[16rem] truncate text-muted-foreground"
+                    title={c.note}
+                  >
+                    {c.note}
+                  </TableCell>
                   <TableCell className="flex justify-end gap-2">
                     <EditDialog conversion={c} />
                     <DeleteButton id={c.id} />

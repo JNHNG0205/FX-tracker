@@ -12,10 +12,15 @@ node_modules/
 # Superpowers scratch (progress ledger, briefs, reports)
 .superpowers/
 
+# Impeccable design tooling (config, sidecar, critique snapshots) — local
+.impeccable/
+
 # Planning docs & local config — kept local, not tracked
 /myr-tool-CLAUDE-PLAN.md
 /docs/
 /CLAUDE.md
+/PRODUCT.md
+/DESIGN.md
 
 # OS
 .DS_Store
