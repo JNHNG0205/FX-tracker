@@ -3,7 +3,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import type { RatePoint } from "@/api/rate";
 
 const config = {
-  myr_usd: { label: "USD per 1 MYR", color: "var(--chart-1)" },
+  value: { label: "USD per 1 MYR", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 
 export function RateChart({ points, live }: { points: RatePoint[]; live: number | null }) {
@@ -12,7 +12,7 @@ export function RateChart({ points, live }: { points: RatePoint[]; live: number 
   }
   const firstDate = points[0].date;
   const lastDate = points[points.length - 1].date;
-  const values = points.map((p) => p.myr_usd).concat(live != null ? [live] : []);
+  const values = points.map((p) => p.value).concat(live != null ? [live] : []);
   const rawMin = Math.min(...values);
   const rawMax = Math.max(...values);
   const range = rawMax - rawMin;
@@ -30,7 +30,7 @@ export function RateChart({ points, live }: { points: RatePoint[]; live: number 
           <XAxis dataKey="date" tickFormatter={(d: string) => d.slice(5)} tickMargin={8} minTickGap={24} />
           <YAxis domain={domain} width={52} tickFormatter={(v: number) => v.toFixed(4)} />
           <ChartTooltip content={<ChartTooltipContent />} />
-          <Line dataKey="myr_usd" type="monotone" stroke="var(--color-primary)" dot={false} strokeWidth={2} />
+          <Line dataKey="value" type="monotone" stroke="var(--color-primary)" dot={false} strokeWidth={2} />
           {live != null && (
             <ReferenceDot
               x={lastDate}

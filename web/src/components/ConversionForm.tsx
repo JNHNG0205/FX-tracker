@@ -10,6 +10,11 @@ import { Label } from "@/components/ui/label";
 
 const INVERSE_RATE_TOLERANCE = 0.15;
 
+// TODO(task10-11): hardcoded stopgap pair to keep the build green; the
+// dashboard will pass the user's selected home/target currencies instead.
+const STOPGAP_FROM = "MYR";
+const STOPGAP_TO = "USD";
+
 export function ConversionForm() {
   const queryClient = useQueryClient();
   const [myrAmount, setMyrAmount] = useState("");
@@ -24,7 +29,10 @@ export function ConversionForm() {
     };
   }, []);
 
-  const liveRate = useQuery({ queryKey: ["rate"], queryFn: fetchRate });
+  const liveRate = useQuery({
+    queryKey: ["rate", STOPGAP_FROM, STOPGAP_TO],
+    queryFn: () => fetchRate(STOPGAP_FROM, STOPGAP_TO),
+  });
 
   const mutation = useMutation({
     mutationFn: createConversion,
@@ -45,7 +53,7 @@ export function ConversionForm() {
   const isDisabled =
     !(myrAmountValue > 0) || !(rateValue > 0) || mutation.isPending;
 
-  const live = liveRate.data?.myr_usd;
+  const live = liveRate.data?.rate;
   const rateRatio = live && rateValue > 0 ? rateValue / live : null;
   const isFarFromLive =
     rateRatio !== null && (rateRatio > 1 + INVERSE_RATE_TOLERANCE || rateRatio < 1 - INVERSE_RATE_TOLERANCE);
@@ -54,8 +62,10 @@ export function ConversionForm() {
     e.preventDefault();
     if (isDisabled) return;
     mutation.mutate({
-      myr_amount: myrAmountValue,
-      rate_myr_usd: rateValue,
+      from_currency: STOPGAP_FROM,
+      to_currency: STOPGAP_TO,
+      from_amount: myrAmountValue,
+      rate: rateValue,
       note: note || undefined,
     });
   }

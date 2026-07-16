@@ -1,25 +1,31 @@
 export type Conversion = {
   id: number;
   date: string;
-  myr_amount: number;
-  rate_myr_usd: number;
+  from_currency: string;
+  to_currency: string;
+  from_amount: number;
+  rate: number;
   note: string;
 };
 
 export type NewConversion = {
   date?: string;
-  myr_amount: number;
-  rate_myr_usd: number;
+  from_currency: string;
+  to_currency: string;
+  from_amount: number;
+  rate: number;
   note?: string;
 };
 
 export type DcaStatus = {
+  from: string;
+  to: string;
   blended_rate: number;
   live_rate: number;
   beats_avg: boolean;
   delta_pct: number;
-  total_myr: number;
-  total_usd: number;
+  total_home: number;
+  total_target: number;
   has_data: boolean;
 };
 
@@ -29,12 +35,16 @@ async function getJson<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+function pairQuery(from: string, to: string): string {
+  return `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+}
+
 export function fetchConversions(): Promise<Conversion[]> {
   return getJson<Conversion[]>("/api/conversions");
 }
 
-export function fetchDcaStatus(): Promise<DcaStatus> {
-  return getJson<DcaStatus>("/api/conversions/status");
+export function fetchDcaStatus(from: string, to: string): Promise<DcaStatus> {
+  return getJson<DcaStatus>(`/api/conversions/status${pairQuery(from, to)}`);
 }
 
 export async function createConversion(body: NewConversion): Promise<Conversion> {

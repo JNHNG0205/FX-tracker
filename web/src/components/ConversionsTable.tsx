@@ -22,15 +22,17 @@ import {
 function EditDialog({ conversion }: { conversion: Conversion }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [myrAmount, setMyrAmount] = useState(String(conversion.myr_amount));
-  const [rate, setRate] = useState(String(conversion.rate_myr_usd));
+  const [myrAmount, setMyrAmount] = useState(String(conversion.from_amount));
+  const [rate, setRate] = useState(String(conversion.rate));
   const [note, setNote] = useState(conversion.note);
 
   const mutation = useMutation({
     mutationFn: () =>
       updateConversion(conversion.id, {
-        myr_amount: Number(myrAmount),
-        rate_myr_usd: Number(rate),
+        from_currency: conversion.from_currency,
+        to_currency: conversion.to_currency,
+        from_amount: Number(myrAmount),
+        rate: Number(rate),
         note,
         date: conversion.date,
       }),
@@ -137,9 +139,9 @@ export function ConversionsTable() {
               {data.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>{c.date.slice(0, 10)}</TableCell>
-                  <TableCell className="tabular-nums">{c.myr_amount.toFixed(2)}</TableCell>
-                  <TableCell className="tabular-nums">{c.rate_myr_usd.toFixed(4)}</TableCell>
-                  <TableCell className="tabular-nums">{(c.myr_amount * c.rate_myr_usd).toFixed(2)}</TableCell>
+                  <TableCell className="tabular-nums">{c.from_amount.toFixed(2)}</TableCell>
+                  <TableCell className="tabular-nums">{c.rate.toFixed(4)}</TableCell>
+                  <TableCell className="tabular-nums">{(c.from_amount * c.rate).toFixed(2)}</TableCell>
                   <TableCell
                     className="max-w-[16rem] truncate text-muted-foreground"
                     title={c.note}

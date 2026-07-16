@@ -3,10 +3,15 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 import { fetchDcaStatus } from "@/api/conversions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
+// TODO(task10-11): hardcoded stopgap pair to keep the build green; the
+// dashboard will pass the user's selected home/target currencies instead.
+const STOPGAP_FROM = "MYR";
+const STOPGAP_TO = "USD";
+
 export function DcaIndicator() {
   const { data } = useQuery({
-    queryKey: ["dcaStatus"],
-    queryFn: fetchDcaStatus,
+    queryKey: ["dcaStatus", STOPGAP_FROM, STOPGAP_TO],
+    queryFn: () => fetchDcaStatus(STOPGAP_FROM, STOPGAP_TO),
     refetchInterval: 60_000,
   });
 

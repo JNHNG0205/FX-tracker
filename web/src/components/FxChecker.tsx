@@ -28,6 +28,11 @@ const verdictPresentation: Record<Verdict, VerdictPresentation> = {
 
 const timeframeLabels = ["7d", "14d", "30d", "90d", "YTD"] as const;
 
+// TODO(task10-11): hardcoded stopgap pair to keep the build green; the
+// dashboard will pass the user's selected home/target currencies instead.
+const STOPGAP_FROM = "MYR";
+const STOPGAP_TO = "USD";
+
 function formatFreshness(fetchedAt: string): string {
   const seconds = Math.max(0, Math.floor((Date.now() - new Date(fetchedAt).getTime()) / 1000));
   if (seconds < 5) return "just now";
@@ -58,13 +63,21 @@ function FxCheckerSkeleton() {
 export function FxChecker() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("30d");
 
-  const rate = useQuery({ queryKey: ["rate"], queryFn: fetchRate, refetchInterval: 60_000 });
-  const ctx = useQuery({
-    queryKey: ["rateContext"],
-    queryFn: fetchRateContext,
+  const rate = useQuery({
+    queryKey: ["rate", STOPGAP_FROM, STOPGAP_TO],
+    queryFn: () => fetchRate(STOPGAP_FROM, STOPGAP_TO),
     refetchInterval: 60_000,
   });
-  const history = useQuery({ queryKey: ["rateHistory"], queryFn: fetchRateHistory, refetchInterval: 60_000 });
+  const ctx = useQuery({
+    queryKey: ["rateContext", STOPGAP_FROM, STOPGAP_TO],
+    queryFn: () => fetchRateContext(STOPGAP_FROM, STOPGAP_TO),
+    refetchInterval: 60_000,
+  });
+  const history = useQuery({
+    queryKey: ["rateHistory", STOPGAP_FROM, STOPGAP_TO],
+    queryFn: () => fetchRateHistory(STOPGAP_FROM, STOPGAP_TO),
+    refetchInterval: 60_000,
+  });
 
   if (rate.isLoading) return <FxCheckerSkeleton />;
 
@@ -95,10 +108,10 @@ export function FxChecker() {
         <CardDescription>Live mid-market exchange rate</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-4xl font-bold tracking-tight tabular-nums">{r.myr_usd.toFixed(4)}</p>
+        <p className="text-4xl font-bold tracking-tight tabular-nums">{r.rate.toFixed(4)}</p>
         <p className="text-sm text-muted-foreground">USD per 1 MYR</p>
         <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-          USD → MYR: {r.usd_myr.toFixed(4)} MYR per 1 USD
+          USD → MYR: {r.inverse.toFixed(4)} MYR per 1 USD
         </p>
         <p className="mt-1 text-xs text-muted-foreground">Updated {formatFreshness(r.fetched_at)}</p>
 
@@ -138,7 +151,7 @@ export function FxChecker() {
         )}
 
         {history.data && (
-          <RateChart points={sliceByTimeframe(history.data.points, selectedTimeframe)} live={r.myr_usd} />
+          <RateChart points={sliceByTimeframe(history.data.points, selectedTimeframe)} live={r.rate} />
         )}
 
         {r.stale && (
