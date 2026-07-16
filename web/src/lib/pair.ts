@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchSettings, updateSettings } from "@/api/settings";
 
 const DEFAULT_HOME = "MYR";
 const DEFAULT_TARGET = "USD";
-const FALLBACK_TARGET = "EUR";
 
 export type ActivePair = {
   home: string;
@@ -12,6 +11,10 @@ export type ActivePair = {
   setHome: (code: string) => void;
   setTarget: (code: string) => void;
 };
+
+function differentFrom(code: string): string {
+  return code === "USD" ? "MYR" : "USD";
+}
 
 export function useActivePair(): ActivePair {
   const queryClient = useQueryClient();
@@ -22,6 +25,12 @@ export function useActivePair(): ActivePair {
     queryFn: fetchSettings,
   });
   const home = settings.data?.home_currency ?? DEFAULT_HOME;
+
+  useEffect(() => {
+    if (home === target) {
+      setTargetState(differentFrom(home));
+    }
+  }, [home, target]);
 
   const mutation = useMutation({
     mutationFn: updateSettings,
@@ -35,7 +44,7 @@ export function useActivePair(): ActivePair {
   };
 
   const setTarget = (code: string) => {
-    setTargetState(code === home ? (home === FALLBACK_TARGET ? DEFAULT_TARGET : FALLBACK_TARGET) : code);
+    setTargetState(code === home ? differentFrom(home) : code);
   };
 
   return { home, target, setHome, setTarget };

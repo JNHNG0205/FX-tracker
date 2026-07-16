@@ -63,21 +63,40 @@ function FxCheckerSkeleton({ from, to }: FxCheckerProps) {
 export function FxChecker({ from, to }: FxCheckerProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("30d");
 
+  const samePair = from === to;
+
   const rate = useQuery({
     queryKey: ["rate", from, to],
     queryFn: () => fetchRate(from, to),
     refetchInterval: 60_000,
+    enabled: !samePair,
   });
   const ctx = useQuery({
     queryKey: ["rateContext", from, to],
     queryFn: () => fetchRateContext(from, to),
     refetchInterval: 60_000,
+    enabled: !samePair,
   });
   const history = useQuery({
     queryKey: ["rateHistory", from, to],
     queryFn: () => fetchRateHistory(from, to),
     refetchInterval: 60_000,
+    enabled: !samePair,
   });
+
+  if (samePair) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>{from} → {to}</CardTitle>
+          <CardDescription>Live mid-market exchange rate</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Pick two different currencies.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (rate.isLoading) return <FxCheckerSkeleton from={from} to={to} />;
 

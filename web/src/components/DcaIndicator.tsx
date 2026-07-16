@@ -13,6 +13,7 @@ export function DcaIndicator({ from, to }: DcaIndicatorProps) {
     queryKey: ["dcaStatus", from, to],
     queryFn: () => fetchDcaStatus(from, to),
     refetchInterval: 60_000,
+    enabled: from !== to,
   });
 
   if (!data?.has_data) return null;

@@ -12,6 +12,7 @@ export function BlendedRateCard({ from, to }: BlendedRateCardProps) {
     queryKey: ["dcaStatus", from, to],
     queryFn: () => fetchDcaStatus(from, to),
     refetchInterval: 60_000,
+    enabled: from !== to,
   });
 
   return (
