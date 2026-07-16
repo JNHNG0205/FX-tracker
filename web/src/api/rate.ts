@@ -1,6 +1,8 @@
 export type Rate = {
-  usd_myr: number;
-  myr_usd: number;
+  from: string;
+  to: string;
+  rate: number;
+  inverse: number;
   fetched_at: string;
   stale: boolean;
 };
@@ -19,8 +21,10 @@ export type TimeframeAssessment = {
 };
 
 export type RateContext = {
-  current_myr_usd: number;
-  current_usd_myr: number;
+  from: string;
+  to: string;
+  rate: number;
+  inverse: number;
   stale: boolean;
   fetched_at: string;
   history_stale: boolean;
@@ -35,24 +39,30 @@ async function getJson<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-export function fetchRate(): Promise<Rate> {
-  return getJson<Rate>("/api/rate");
+function pairQuery(from: string, to: string): string {
+  return `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
 }
 
-export function fetchRateContext(): Promise<RateContext> {
-  return getJson<RateContext>("/api/rate/context");
+export function fetchRate(from: string, to: string): Promise<Rate> {
+  return getJson<Rate>(`/api/rate${pairQuery(from, to)}`);
+}
+
+export function fetchRateContext(from: string, to: string): Promise<RateContext> {
+  return getJson<RateContext>(`/api/rate/context${pairQuery(from, to)}`);
 }
 
 export type RatePoint = {
   date: string;
-  myr_usd: number;
+  value: number;
 };
 
 export type RateHistory = {
+  from: string;
+  to: string;
   points: RatePoint[];
   stale: boolean;
 };
 
-export function fetchRateHistory(): Promise<RateHistory> {
-  return getJson<RateHistory>("/api/rate/history");
+export function fetchRateHistory(from: string, to: string): Promise<RateHistory> {
+  return getJson<RateHistory>(`/api/rate/history${pairQuery(from, to)}`);
 }

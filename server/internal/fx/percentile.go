@@ -2,8 +2,9 @@ package fx
 
 import "math"
 
-// Percentile ranks current against window (MyrUsd values, higher = better for
-// the buyer). pct is round(100 * fraction of window strictly less than current):
+// Percentile ranks current (target-per-home) against the window's values;
+// higher = more target per home = better for the buyer. pct is
+// round(100 * fraction of window strictly less than current):
 // "today beats pct% of the days in the window". Empty window yields "unknown".
 func Percentile(current float64, window []float64) (pct int, assessment string, min, max float64) {
 	if len(window) == 0 {

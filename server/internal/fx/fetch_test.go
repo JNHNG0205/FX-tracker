@@ -9,17 +9,17 @@ import (
 
 func TestFetch(t *testing.T) {
 	tests := []struct {
-		name       string
-		body       string
-		status     int
-		wantErr    bool
-		wantUsdMyr float64
+		name     string
+		body     string
+		status   int
+		wantErr  bool
+		wantRate float64
 	}{
 		{
-			name:       "ok",
-			body:       `{"amount":1.0,"base":"USD","date":"2026-07-08","rates":{"MYR":4.72}}`,
-			status:     http.StatusOK,
-			wantUsdMyr: 4.72,
+			name:     "ok",
+			body:     `{"amount":1.0,"base":"MYR","date":"2026-07-08","rates":{"USD":0.21}}`,
+			status:   http.StatusOK,
+			wantRate: 0.21,
 		},
 		{
 			name:    "upstream 500",
@@ -28,8 +28,8 @@ func TestFetch(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "missing MYR rate",
-			body:    `{"amount":1.0,"base":"USD","date":"2026-07-08","rates":{}}`,
+			name:    "missing rate",
+			body:    `{"amount":1.0,"base":"MYR","date":"2026-07-08","rates":{}}`,
 			status:  http.StatusOK,
 			wantErr: true,
 		},
@@ -43,7 +43,7 @@ func TestFetch(t *testing.T) {
 			}))
 			defer srv.Close()
 
-			got, err := Fetch(context.Background(), srv.Client(), srv.URL)
+			got, err := Fetch(context.Background(), srv.Client(), srv.URL, "MYR", "USD")
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
@@ -53,12 +53,15 @@ func TestFetch(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			if got.UsdMyr != tt.wantUsdMyr {
-				t.Fatalf("UsdMyr = %v, want %v", got.UsdMyr, tt.wantUsdMyr)
+			if got.Rate != tt.wantRate {
+				t.Fatalf("Rate = %v, want %v", got.Rate, tt.wantRate)
 			}
-			wantMyrUsd := 1.0 / tt.wantUsdMyr
-			if got.MyrUsd != wantMyrUsd {
-				t.Fatalf("MyrUsd = %v, want %v", got.MyrUsd, wantMyrUsd)
+			wantInverse := 1.0 / tt.wantRate
+			if got.Inverse != wantInverse {
+				t.Fatalf("Inverse = %v, want %v", got.Inverse, wantInverse)
+			}
+			if got.From != "MYR" || got.To != "USD" {
+				t.Fatalf("From/To = %q/%q, want MYR/USD", got.From, got.To)
 			}
 		})
 	}

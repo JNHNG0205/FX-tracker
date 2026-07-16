@@ -9,12 +9,14 @@ import (
 )
 
 type DCAStatus struct {
+	From        string  `json:"from"`
+	To          string  `json:"to"`
 	BlendedRate float64 `json:"blended_rate"`
 	LiveRate    float64 `json:"live_rate"`
 	BeatsAvg    bool    `json:"beats_avg"`
 	DeltaPct    float64 `json:"delta_pct"`
-	TotalMyr    float64 `json:"total_myr"`
-	TotalUsd    float64 `json:"total_usd"`
+	TotalHome   float64 `json:"total_home"`
+	TotalTarget float64 `json:"total_target"`
 	HasData     bool    `json:"has_data"`
 }
 
@@ -42,30 +44,33 @@ func (s *ConversionService) Delete(ctx context.Context, id uint) error {
 	return s.repo.Delete(ctx, id)
 }
 
-// Status compares the live rate (USD per MYR) to the blended average. A higher
-// live rate means more USD per MYR now than the average cost, i.e. beats_avg.
-func (s *ConversionService) Status(ctx context.Context, liveRate float64) (DCAStatus, error) {
+// Status compares the live rate (target per 1 home) to the blended average
+// for a given currency pair. A higher live rate means more target currency
+// per unit of home currency now than the average cost, i.e. beats_avg.
+func (s *ConversionService) Status(ctx context.Context, from, to string, liveRate float64) (DCAStatus, error) {
 	// A non-positive liveRate means we haven't fetched a live FX rate yet
 	// (cold start) or the FX source was down at boot — there's nothing to
 	// compare the blended average against, so signal "no comparison" rather
 	// than a misleading -100% delta.
 	if liveRate <= 0 {
-		return DCAStatus{HasData: false, LiveRate: liveRate}, nil
+		return DCAStatus{From: from, To: to, LiveRate: liveRate, HasData: false}, nil
 	}
-	blended, totalMyr, totalUsd, err := s.repo.BlendedRate(ctx)
+	blended, totalHome, totalTarget, err := s.repo.BlendedRate(ctx, from, to)
 	if err != nil {
 		return DCAStatus{}, err
 	}
-	if totalMyr == 0 {
-		return DCAStatus{LiveRate: liveRate, HasData: false}, nil
+	if totalHome == 0 {
+		return DCAStatus{From: from, To: to, LiveRate: liveRate, HasData: false}, nil
 	}
 	return DCAStatus{
+		From:        from,
+		To:          to,
 		BlendedRate: blended,
 		LiveRate:    liveRate,
 		BeatsAvg:    liveRate > blended,
 		DeltaPct:    math.Round((liveRate-blended)/blended*100*1e10) / 1e10,
-		TotalMyr:    totalMyr,
-		TotalUsd:    totalUsd,
+		TotalHome:   totalHome,
+		TotalTarget: totalTarget,
 		HasData:     true,
 	}, nil
 }

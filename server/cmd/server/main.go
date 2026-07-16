@@ -31,19 +31,15 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// 10s timeout so a hung upstream can't stall the refresh loop indefinitely.
+	// 10s timeout so a hung upstream can't stall a rate fetch indefinitely.
 	httpClient := &http.Client{Timeout: 10 * time.Second}
 	cache := fx.NewCache(httpClient, cfg.FxBaseURL)
-	go cache.Run(ctx, 10*time.Minute)
-
-	history := fx.NewHistoryCache(httpClient, cfg.FxBaseURL)
-	// Historical series changes at most daily; refresh once a day.
-	go history.Run(ctx, 24*time.Hour)
 
 	convRepo := repository.NewConversionRepository(db)
 	convService := service.NewConversionService(convRepo)
+	settingsRepo := repository.NewSettingsRepository(db)
 
-	h := handler.New(cache, history, convService)
+	h := handler.New(cache, convService, settingsRepo)
 	r := router.New(h)
 
 	srv := &http.Server{Addr: ":" + cfg.Port, Handler: r}

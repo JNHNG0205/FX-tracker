@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle } from "lucide-react";
 import {
   fetchConversions,
   updateConversion,
   deleteConversion,
   type Conversion,
 } from "@/api/conversions";
+import { CurrencySelect } from "@/components/CurrencySelect";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -22,15 +24,19 @@ import {
 function EditDialog({ conversion }: { conversion: Conversion }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [myrAmount, setMyrAmount] = useState(String(conversion.myr_amount));
-  const [rate, setRate] = useState(String(conversion.rate_myr_usd));
+  const [from, setFrom] = useState(conversion.from_currency);
+  const [to, setTo] = useState(conversion.to_currency);
+  const [amount, setAmount] = useState(String(conversion.from_amount));
+  const [rate, setRate] = useState(String(conversion.rate));
   const [note, setNote] = useState(conversion.note);
 
   const mutation = useMutation({
     mutationFn: () =>
       updateConversion(conversion.id, {
-        myr_amount: Number(myrAmount),
-        rate_myr_usd: Number(rate),
+        from_currency: from,
+        to_currency: to,
+        from_amount: Number(amount),
+        rate: Number(rate),
         note,
         date: conversion.date,
       }),
@@ -41,7 +47,8 @@ function EditDialog({ conversion }: { conversion: Conversion }) {
     },
   });
 
-  const valid = Number(myrAmount) > 0 && Number(rate) > 0;
+  const samePair = from === to;
+  const valid = Number(amount) > 0 && Number(rate) > 0 && !samePair;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -57,12 +64,28 @@ function EditDialog({ conversion }: { conversion: Conversion }) {
             if (valid) mutation.mutate();
           }}
         >
+          <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label>From</Label>
+              <CurrencySelect value={from} onChange={setFrom} label="From currency" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>To</Label>
+              <CurrencySelect value={to} onChange={setTo} label="To currency" />
+            </div>
+          </div>
+          {samePair && (
+            <p className="flex items-center gap-1.5 text-sm text-caution">
+              <AlertTriangle className="size-4" aria-hidden="true" />
+              From and To currencies must differ.
+            </p>
+          )}
           <div>
-            <Label htmlFor={`myr-${conversion.id}`}>MYR amount</Label>
-            <Input id={`myr-${conversion.id}`} type="number" step="0.01" min="0" value={myrAmount} onChange={(e) => setMyrAmount(e.target.value)} />
+            <Label htmlFor={`amount-${conversion.id}`}>Amount ({from})</Label>
+            <Input id={`amount-${conversion.id}`} type="number" step="0.01" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </div>
           <div>
-            <Label htmlFor={`rate-${conversion.id}`}>Rate (USD per 1 MYR)</Label>
+            <Label htmlFor={`rate-${conversion.id}`}>Rate ({to} per 1 {from})</Label>
             <Input id={`rate-${conversion.id}`} type="number" step="0.0001" min="0" value={rate} onChange={(e) => setRate(e.target.value)} />
           </div>
           <div>
@@ -126,9 +149,10 @@ export function ConversionsTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
-                <TableHead>MYR</TableHead>
+                <TableHead>Pair</TableHead>
+                <TableHead>Amount</TableHead>
                 <TableHead>Rate</TableHead>
-                <TableHead>USD</TableHead>
+                <TableHead>Received</TableHead>
                 <TableHead>Note</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -137,9 +161,10 @@ export function ConversionsTable() {
               {data.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>{c.date.slice(0, 10)}</TableCell>
-                  <TableCell className="tabular-nums">{c.myr_amount.toFixed(2)}</TableCell>
-                  <TableCell className="tabular-nums">{c.rate_myr_usd.toFixed(4)}</TableCell>
-                  <TableCell className="tabular-nums">{(c.myr_amount * c.rate_myr_usd).toFixed(2)}</TableCell>
+                  <TableCell>{c.from_currency}→{c.to_currency}</TableCell>
+                  <TableCell className="tabular-nums">{c.from_amount.toFixed(2)}</TableCell>
+                  <TableCell className="tabular-nums">{c.rate.toFixed(4)}</TableCell>
+                  <TableCell className="tabular-nums">{(c.from_amount * c.rate).toFixed(2)}</TableCell>
                   <TableCell
                     className="max-w-[16rem] truncate text-muted-foreground"
                     title={c.note}

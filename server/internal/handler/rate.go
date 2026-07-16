@@ -7,17 +7,39 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"fx-tracker/internal/fx"
+	"fx-tracker/internal/repository"
 	"fx-tracker/internal/service"
 )
 
 type Handler struct {
-	cache   *fx.Cache
-	history *fx.HistoryCache
-	conv    *service.ConversionService
+	cache    *fx.Cache
+	conv     *service.ConversionService
+	settings repository.SettingsRepository
 }
 
-func New(cache *fx.Cache, history *fx.HistoryCache, conv *service.ConversionService) *Handler {
-	return &Handler{cache: cache, history: history, conv: conv}
+func New(cache *fx.Cache, conv *service.ConversionService, settings repository.SettingsRepository) *Handler {
+	return &Handler{cache: cache, conv: conv, settings: settings}
+}
+
+// pairParams reads/validates the from/to query params shared by rate and
+// conversion-status endpoints. On failure it writes the 400 response itself
+// and returns ok=false so the caller can just `return`.
+func pairParams(c *gin.Context) (from, to string, ok bool) {
+	from = c.Query("from")
+	to = c.Query("to")
+	if from == "" || to == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "from and to are required"})
+		return "", "", false
+	}
+	if !fx.IsSupported(from) || !fx.IsSupported(to) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported currency"})
+		return "", "", false
+	}
+	if from == to {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "from and to must differ"})
+		return "", "", false
+	}
+	return from, to, true
 }
 
 func (h *Handler) Health(c *gin.Context) {
@@ -25,27 +47,40 @@ func (h *Handler) Health(c *gin.Context) {
 }
 
 func (h *Handler) Rate(c *gin.Context) {
-	c.JSON(http.StatusOK, h.cache.Get())
+	from, to, ok := pairParams(c)
+	if !ok {
+		return
+	}
+	rate, err := h.cache.Rate(c.Request.Context(), from, to)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "rate source unavailable"})
+		return
+	}
+	c.JSON(http.StatusOK, rate)
 }
 
 func (h *Handler) RateContext(c *gin.Context) {
-	rate := h.cache.Get()
-	now := time.Now()
-	c.JSON(http.StatusOK, fx.RateContext{
-		CurrentMyrUsd: rate.MyrUsd,
-		CurrentUsdMyr: rate.UsdMyr,
-		Stale:         rate.Stale,
-		FetchedAt:     rate.FetchedAt,
-		HistoryStale:  h.history.Stale(),
-		Timeframes:    h.history.Assess(rate.MyrUsd, now),
-	})
+	from, to, ok := pairParams(c)
+	if !ok {
+		return
+	}
+	ctx, err := h.cache.Context(c.Request.Context(), from, to, time.Now())
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "rate source unavailable"})
+		return
+	}
+	c.JSON(http.StatusOK, ctx)
 }
 
 func (h *Handler) RateHistory(c *gin.Context) {
-	pts := h.history.Points()
-	out := make([]fx.Point, 0, len(pts))
-	for _, p := range pts {
-		out = append(out, fx.Point{Date: p.Date.Format("2006-01-02"), MyrUsd: p.MyrUsd})
+	from, to, ok := pairParams(c)
+	if !ok {
+		return
 	}
-	c.JSON(http.StatusOK, fx.RateHistory{Points: out, Stale: h.history.Stale()})
+	hist, err := h.cache.History(c.Request.Context(), from, to)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "rate source unavailable"})
+		return
+	}
+	c.JSON(http.StatusOK, hist)
 }

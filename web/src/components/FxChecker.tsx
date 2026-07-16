@@ -38,11 +38,16 @@ function formatFreshness(fetchedAt: string): string {
   return `${hours}h ago`;
 }
 
-function FxCheckerSkeleton() {
+type FxCheckerProps = {
+  from: string;
+  to: string;
+};
+
+function FxCheckerSkeleton({ from, to }: FxCheckerProps) {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>MYR → USD</CardTitle>
+        <CardTitle>{from} → {to}</CardTitle>
         <CardDescription>Live mid-market exchange rate</CardDescription>
       </CardHeader>
       <CardContent>
@@ -55,24 +60,51 @@ function FxCheckerSkeleton() {
   );
 }
 
-export function FxChecker() {
+export function FxChecker({ from, to }: FxCheckerProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("30d");
 
-  const rate = useQuery({ queryKey: ["rate"], queryFn: fetchRate, refetchInterval: 60_000 });
-  const ctx = useQuery({
-    queryKey: ["rateContext"],
-    queryFn: fetchRateContext,
-    refetchInterval: 60_000,
-  });
-  const history = useQuery({ queryKey: ["rateHistory"], queryFn: fetchRateHistory, refetchInterval: 60_000 });
+  const samePair = from === to;
 
-  if (rate.isLoading) return <FxCheckerSkeleton />;
+  const rate = useQuery({
+    queryKey: ["rate", from, to],
+    queryFn: () => fetchRate(from, to),
+    refetchInterval: 60_000,
+    enabled: !samePair,
+  });
+  const ctx = useQuery({
+    queryKey: ["rateContext", from, to],
+    queryFn: () => fetchRateContext(from, to),
+    refetchInterval: 60_000,
+    enabled: !samePair,
+  });
+  const history = useQuery({
+    queryKey: ["rateHistory", from, to],
+    queryFn: () => fetchRateHistory(from, to),
+    refetchInterval: 60_000,
+    enabled: !samePair,
+  });
+
+  if (samePair) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>{from} → {to}</CardTitle>
+          <CardDescription>Live mid-market exchange rate</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Pick two different currencies.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (rate.isLoading) return <FxCheckerSkeleton from={from} to={to} />;
 
   if (rate.isError || !rate.data) {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>MYR → USD</CardTitle>
+          <CardTitle>{from} → {to}</CardTitle>
           <CardDescription>Live mid-market exchange rate</CardDescription>
         </CardHeader>
         <CardContent>
@@ -91,14 +123,14 @@ export function FxChecker() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>MYR → USD</CardTitle>
+        <CardTitle>{from} → {to}</CardTitle>
         <CardDescription>Live mid-market exchange rate</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-4xl font-bold tracking-tight tabular-nums">{r.myr_usd.toFixed(4)}</p>
-        <p className="text-sm text-muted-foreground">USD per 1 MYR</p>
+        <p className="text-4xl font-bold tracking-tight tabular-nums">{r.rate.toFixed(4)}</p>
+        <p className="text-sm text-muted-foreground">{to} per 1 {from}</p>
         <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-          USD → MYR: {r.usd_myr.toFixed(4)} MYR per 1 USD
+          {to} → {from}: {r.inverse.toFixed(4)} {from} per 1 {to}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">Updated {formatFreshness(r.fetched_at)}</p>
 
@@ -138,7 +170,12 @@ export function FxChecker() {
         )}
 
         {history.data && (
-          <RateChart points={sliceByTimeframe(history.data.points, selectedTimeframe)} live={r.myr_usd} />
+          <RateChart
+            points={sliceByTimeframe(history.data.points, selectedTimeframe)}
+            live={r.rate}
+            from={from}
+            to={to}
+          />
         )}
 
         {r.stale && (

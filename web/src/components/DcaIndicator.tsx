@@ -3,11 +3,17 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 import { fetchDcaStatus } from "@/api/conversions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
-export function DcaIndicator() {
+type DcaIndicatorProps = {
+  from: string;
+  to: string;
+};
+
+export function DcaIndicator({ from, to }: DcaIndicatorProps) {
   const { data } = useQuery({
-    queryKey: ["dcaStatus"],
-    queryFn: fetchDcaStatus,
+    queryKey: ["dcaStatus", from, to],
+    queryFn: () => fetchDcaStatus(from, to),
     refetchInterval: 60_000,
+    enabled: from !== to,
   });
 
   if (!data?.has_data) return null;
@@ -31,7 +37,7 @@ export function DcaIndicator() {
           {data.beats_avg ? "better" : "worse"} than your average
         </p>
         <p className="mt-2 text-sm text-muted-foreground tabular-nums">
-          Live {data.live_rate.toFixed(4)} vs blended {data.blended_rate.toFixed(4)} (USD per 1 MYR)
+          Live {data.live_rate.toFixed(4)} vs blended {data.blended_rate.toFixed(4)} ({to} per 1 {from})
         </p>
       </CardContent>
     </Card>

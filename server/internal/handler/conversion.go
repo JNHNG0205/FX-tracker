@@ -9,14 +9,35 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"fx-tracker/internal/fx"
 	"fx-tracker/internal/model"
 )
 
 type createConversionReq struct {
-	Date       *time.Time `json:"date"`
-	MyrAmount  float64    `json:"myr_amount"`
-	RateMyrUsd float64    `json:"rate_myr_usd"`
-	Note       string     `json:"note"`
+	Date         *time.Time `json:"date"`
+	FromCurrency string     `json:"from_currency"`
+	ToCurrency   string     `json:"to_currency"`
+	FromAmount   float64    `json:"from_amount"`
+	Rate         float64    `json:"rate"`
+	Note         string     `json:"note"`
+}
+
+// validate reports the first validation error for the request body, or ""
+// if it's valid.
+func (r createConversionReq) validate() string {
+	if !fx.IsSupported(r.FromCurrency) || !fx.IsSupported(r.ToCurrency) {
+		return "unsupported currency"
+	}
+	if r.FromCurrency == r.ToCurrency {
+		return "from_currency and to_currency must differ"
+	}
+	if r.FromAmount <= 0 {
+		return "from_amount must be > 0"
+	}
+	if r.Rate <= 0 {
+		return "rate must be > 0"
+	}
+	return ""
 }
 
 func (h *Handler) CreateConversion(c *gin.Context) {
@@ -25,8 +46,8 @@ func (h *Handler) CreateConversion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
-	if req.MyrAmount <= 0 || req.RateMyrUsd <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "myr_amount and rate_myr_usd must be > 0"})
+	if msg := req.validate(); msg != "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": msg})
 		return
 	}
 	date := time.Now()
@@ -34,10 +55,12 @@ func (h *Handler) CreateConversion(c *gin.Context) {
 		date = *req.Date
 	}
 	conv := &model.Conversion{
-		Date:       date,
-		MyrAmount:  req.MyrAmount,
-		RateMyrUsd: req.RateMyrUsd,
-		Note:       req.Note,
+		Date:         date,
+		FromCurrency: req.FromCurrency,
+		ToCurrency:   req.ToCurrency,
+		FromAmount:   req.FromAmount,
+		Rate:         req.Rate,
+		Note:         req.Note,
 	}
 	if err := h.conv.Create(c.Request.Context(), conv); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not save conversion"})
@@ -56,8 +79,16 @@ func (h *Handler) ListConversions(c *gin.Context) {
 }
 
 func (h *Handler) ConversionStatus(c *gin.Context) {
-	liveRate := h.cache.Get().MyrUsd
-	status, err := h.conv.Status(c.Request.Context(), liveRate)
+	from, to, ok := pairParams(c)
+	if !ok {
+		return
+	}
+	rate, err := h.cache.Rate(c.Request.Context(), from, to)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "rate source unavailable"})
+		return
+	}
+	status, err := h.conv.Status(c.Request.Context(), from, to, rate.Rate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not compute status"})
 		return
@@ -84,15 +115,23 @@ func (h *Handler) UpdateConversion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
-	if req.MyrAmount <= 0 || req.RateMyrUsd <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "myr_amount and rate_myr_usd must be > 0"})
+	if msg := req.validate(); msg != "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": msg})
 		return
 	}
 	date := time.Now()
 	if req.Date != nil {
 		date = *req.Date
 	}
-	conv := &model.Conversion{ID: id, Date: date, MyrAmount: req.MyrAmount, RateMyrUsd: req.RateMyrUsd, Note: req.Note}
+	conv := &model.Conversion{
+		ID:           id,
+		Date:         date,
+		FromCurrency: req.FromCurrency,
+		ToCurrency:   req.ToCurrency,
+		FromAmount:   req.FromAmount,
+		Rate:         req.Rate,
+		Note:         req.Note,
+	}
 	if err := h.conv.Update(c.Request.Context(), conv); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "conversion not found"})

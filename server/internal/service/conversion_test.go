@@ -6,21 +6,26 @@ import (
 	"testing"
 
 	"fx-tracker/internal/model"
+	"fx-tracker/internal/repository"
 	"gorm.io/gorm"
 )
 
 // fakeRepo implements repository.ConversionRepository in memory.
 type fakeRepo struct {
-	rate, totalMyr, totalUsd float64
-	err                      error
-	updated                  *model.Conversion
-	deleted                  uint
+	rate, totalHome, totalTarget float64
+	err                          error
+	pairs                        []repository.Pair
+	updated                      *model.Conversion
+	deleted                      uint
 }
 
 func (f *fakeRepo) Create(ctx context.Context, c *model.Conversion) error { return f.err }
 func (f *fakeRepo) List(ctx context.Context) ([]model.Conversion, error)  { return nil, f.err }
-func (f *fakeRepo) BlendedRate(ctx context.Context) (float64, float64, float64, error) {
-	return f.rate, f.totalMyr, f.totalUsd, f.err
+func (f *fakeRepo) BlendedRate(ctx context.Context, from, to string) (float64, float64, float64, error) {
+	return f.rate, f.totalHome, f.totalTarget, f.err
+}
+func (f *fakeRepo) Pairs(ctx context.Context) ([]repository.Pair, error) {
+	return f.pairs, f.err
 }
 func (f *fakeRepo) Update(ctx context.Context, c *model.Conversion) error {
 	f.updated = c
@@ -32,22 +37,26 @@ func TestStatus(t *testing.T) {
 	tests := []struct {
 		name         string
 		repo         *fakeRepo
+		from, to     string
 		live         float64
 		wantHasData  bool
 		wantBeats    bool
 		wantDeltaPct float64
 	}{
-		{"no conversions", &fakeRepo{}, 0.24, false, false, 0},
-		{"live beats average", &fakeRepo{rate: 0.20, totalMyr: 1000, totalUsd: 200}, 0.205, true, true, 2.5},
-		{"live below average", &fakeRepo{rate: 0.20, totalMyr: 1000, totalUsd: 200}, 0.195, true, false, -2.5},
-		{"live rate unavailable", &fakeRepo{rate: 0.20, totalMyr: 1000, totalUsd: 200}, 0, false, false, 0},
+		{"no conversions", &fakeRepo{}, "MYR", "USD", 0.24, false, false, 0},
+		{"live beats average", &fakeRepo{rate: 0.20, totalHome: 1000, totalTarget: 200}, "MYR", "USD", 0.205, true, true, 2.5},
+		{"live below average", &fakeRepo{rate: 0.20, totalHome: 1000, totalTarget: 200}, "MYR", "USD", 0.195, true, false, -2.5},
+		{"live rate unavailable", &fakeRepo{rate: 0.20, totalHome: 1000, totalTarget: 200}, "MYR", "USD", 0, false, false, 0},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewConversionService(tt.repo)
-			got, err := s.Status(context.Background(), tt.live)
+			got, err := s.Status(context.Background(), tt.from, tt.to, tt.live)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if got.From != tt.from || got.To != tt.to {
+				t.Fatalf("pair = %s/%s, want %s/%s", got.From, got.To, tt.from, tt.to)
 			}
 			if got.HasData != tt.wantHasData || got.BeatsAvg != tt.wantBeats {
 				t.Fatalf("status = %+v", got)
@@ -64,7 +73,7 @@ func TestUpdateDeleteDelegate(t *testing.T) {
 	s := NewConversionService(repo)
 	ctx := context.Background()
 
-	c := &model.Conversion{ID: 7, MyrAmount: 100, RateMyrUsd: 0.2}
+	c := &model.Conversion{ID: 7, FromCurrency: "MYR", ToCurrency: "USD", FromAmount: 100, Rate: 0.2}
 	if err := s.Update(ctx, c); err != nil {
 		t.Fatal(err)
 	}
