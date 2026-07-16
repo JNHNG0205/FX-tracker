@@ -28,11 +28,6 @@ const verdictPresentation: Record<Verdict, VerdictPresentation> = {
 
 const timeframeLabels = ["7d", "14d", "30d", "90d", "YTD"] as const;
 
-// TODO(task10-11): hardcoded stopgap pair to keep the build green; the
-// dashboard will pass the user's selected home/target currencies instead.
-const STOPGAP_FROM = "MYR";
-const STOPGAP_TO = "USD";
-
 function formatFreshness(fetchedAt: string): string {
   const seconds = Math.max(0, Math.floor((Date.now() - new Date(fetchedAt).getTime()) / 1000));
   if (seconds < 5) return "just now";
@@ -43,11 +38,16 @@ function formatFreshness(fetchedAt: string): string {
   return `${hours}h ago`;
 }
 
-function FxCheckerSkeleton() {
+type FxCheckerProps = {
+  from: string;
+  to: string;
+};
+
+function FxCheckerSkeleton({ from, to }: FxCheckerProps) {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>MYR → USD</CardTitle>
+        <CardTitle>{from} → {to}</CardTitle>
         <CardDescription>Live mid-market exchange rate</CardDescription>
       </CardHeader>
       <CardContent>
@@ -60,32 +60,32 @@ function FxCheckerSkeleton() {
   );
 }
 
-export function FxChecker() {
+export function FxChecker({ from, to }: FxCheckerProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("30d");
 
   const rate = useQuery({
-    queryKey: ["rate", STOPGAP_FROM, STOPGAP_TO],
-    queryFn: () => fetchRate(STOPGAP_FROM, STOPGAP_TO),
+    queryKey: ["rate", from, to],
+    queryFn: () => fetchRate(from, to),
     refetchInterval: 60_000,
   });
   const ctx = useQuery({
-    queryKey: ["rateContext", STOPGAP_FROM, STOPGAP_TO],
-    queryFn: () => fetchRateContext(STOPGAP_FROM, STOPGAP_TO),
+    queryKey: ["rateContext", from, to],
+    queryFn: () => fetchRateContext(from, to),
     refetchInterval: 60_000,
   });
   const history = useQuery({
-    queryKey: ["rateHistory", STOPGAP_FROM, STOPGAP_TO],
-    queryFn: () => fetchRateHistory(STOPGAP_FROM, STOPGAP_TO),
+    queryKey: ["rateHistory", from, to],
+    queryFn: () => fetchRateHistory(from, to),
     refetchInterval: 60_000,
   });
 
-  if (rate.isLoading) return <FxCheckerSkeleton />;
+  if (rate.isLoading) return <FxCheckerSkeleton from={from} to={to} />;
 
   if (rate.isError || !rate.data) {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>MYR → USD</CardTitle>
+          <CardTitle>{from} → {to}</CardTitle>
           <CardDescription>Live mid-market exchange rate</CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,14 +104,14 @@ export function FxChecker() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>MYR → USD</CardTitle>
+        <CardTitle>{from} → {to}</CardTitle>
         <CardDescription>Live mid-market exchange rate</CardDescription>
       </CardHeader>
       <CardContent>
         <p className="text-4xl font-bold tracking-tight tabular-nums">{r.rate.toFixed(4)}</p>
-        <p className="text-sm text-muted-foreground">USD per 1 MYR</p>
+        <p className="text-sm text-muted-foreground">{to} per 1 {from}</p>
         <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-          USD → MYR: {r.inverse.toFixed(4)} MYR per 1 USD
+          {to} → {from}: {r.inverse.toFixed(4)} {from} per 1 {to}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">Updated {formatFreshness(r.fetched_at)}</p>
 
@@ -151,7 +151,12 @@ export function FxChecker() {
         )}
 
         {history.data && (
-          <RateChart points={sliceByTimeframe(history.data.points, selectedTimeframe)} live={r.rate} />
+          <RateChart
+            points={sliceByTimeframe(history.data.points, selectedTimeframe)}
+            live={r.rate}
+            from={from}
+            to={to}
+          />
         )}
 
         {r.stale && (

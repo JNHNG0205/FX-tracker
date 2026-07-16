@@ -3,15 +3,15 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 import { fetchDcaStatus } from "@/api/conversions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
-// TODO(task10-11): hardcoded stopgap pair to keep the build green; the
-// dashboard will pass the user's selected home/target currencies instead.
-const STOPGAP_FROM = "MYR";
-const STOPGAP_TO = "USD";
+type DcaIndicatorProps = {
+  from: string;
+  to: string;
+};
 
-export function DcaIndicator() {
+export function DcaIndicator({ from, to }: DcaIndicatorProps) {
   const { data } = useQuery({
-    queryKey: ["dcaStatus", STOPGAP_FROM, STOPGAP_TO],
-    queryFn: () => fetchDcaStatus(STOPGAP_FROM, STOPGAP_TO),
+    queryKey: ["dcaStatus", from, to],
+    queryFn: () => fetchDcaStatus(from, to),
     refetchInterval: 60_000,
   });
 
@@ -36,7 +36,7 @@ export function DcaIndicator() {
           {data.beats_avg ? "better" : "worse"} than your average
         </p>
         <p className="mt-2 text-sm text-muted-foreground tabular-nums">
-          Live {data.live_rate.toFixed(4)} vs blended {data.blended_rate.toFixed(4)} (USD per 1 MYR)
+          Live {data.live_rate.toFixed(4)} vs blended {data.blended_rate.toFixed(4)} ({to} per 1 {from})
         </p>
       </CardContent>
     </Card>

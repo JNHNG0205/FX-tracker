@@ -2,11 +2,18 @@ import { Line, LineChart, XAxis, YAxis, CartesianGrid, ReferenceDot } from "rech
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import type { RatePoint } from "@/api/rate";
 
-const config = {
-  value: { label: "USD per 1 MYR", color: "var(--chart-1)" },
-} satisfies ChartConfig;
+type RateChartProps = {
+  points: RatePoint[];
+  live: number | null;
+  from: string;
+  to: string;
+};
 
-export function RateChart({ points, live }: { points: RatePoint[]; live: number | null }) {
+export function RateChart({ points, live, from, to }: RateChartProps) {
+  const config = {
+    value: { label: `${to} per 1 ${from}`, color: "var(--chart-1)" },
+  } satisfies ChartConfig;
+
   if (points.length === 0) {
     return <p className="mt-3 text-sm text-muted-foreground">No historical data for this window yet.</p>;
   }
@@ -19,7 +26,7 @@ export function RateChart({ points, live }: { points: RatePoint[]; live: number 
   const padding = range > 0 ? range * 0.02 : 0.0001;
   const domain: [number, number] = [rawMin - padding, rawMax + padding];
   const summary =
-    `MYR to USD over the selected window: ${points.length} points from ${firstDate} to ${lastDate}` +
+    `${from} to ${to} over the selected window: ${points.length} points from ${firstDate} to ${lastDate}` +
     (live != null ? `, currently ${live.toFixed(4)}` : "");
   return (
     <div role="img" aria-label={summary} className="mt-3">
