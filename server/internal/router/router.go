@@ -27,5 +27,8 @@ func New(h *handler.Handler) *gin.Engine {
 	r.GET("/api/conversions/status", h.ConversionStatus)
 	r.PUT("/api/conversions/:id", h.UpdateConversion)
 	r.DELETE("/api/conversions/:id", h.DeleteConversion)
+
+	r.GET("/api/settings", h.GetSettings)
+	r.PUT("/api/settings", h.UpdateSettings)
 	return r
 }
