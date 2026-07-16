@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Check } from "lucide-react";
 import { createConversion } from "@/api/conversions";
 import { fetchRate } from "@/api/rate";
+import { useActivePair } from "@/lib/pair";
+import { CurrencySelect } from "@/components/CurrencySelect";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,14 +12,12 @@ import { Label } from "@/components/ui/label";
 
 const INVERSE_RATE_TOLERANCE = 0.15;
 
-// TODO(task10-11): hardcoded stopgap pair to keep the build green; the
-// dashboard will pass the user's selected home/target currencies instead.
-const STOPGAP_FROM = "MYR";
-const STOPGAP_TO = "USD";
-
 export function ConversionForm() {
   const queryClient = useQueryClient();
-  const [myrAmount, setMyrAmount] = useState("");
+  const { home, target } = useActivePair();
+  const [from, setFrom] = useState(home);
+  const [to, setTo] = useState(target);
+  const [amount, setAmount] = useState("");
   const [rate, setRate] = useState("");
   const [note, setNote] = useState("");
   const [justSaved, setJustSaved] = useState(false);
@@ -30,14 +30,15 @@ export function ConversionForm() {
   }, []);
 
   const liveRate = useQuery({
-    queryKey: ["rate", STOPGAP_FROM, STOPGAP_TO],
-    queryFn: () => fetchRate(STOPGAP_FROM, STOPGAP_TO),
+    queryKey: ["rate", from, to],
+    queryFn: () => fetchRate(from, to),
+    enabled: from !== to,
   });
 
   const mutation = useMutation({
     mutationFn: createConversion,
     onSuccess: () => {
-      setMyrAmount("");
+      setAmount("");
       setRate("");
       setNote("");
       queryClient.invalidateQueries({ queryKey: ["conversions"] });
@@ -48,10 +49,11 @@ export function ConversionForm() {
     },
   });
 
-  const myrAmountValue = Number(myrAmount);
+  const amountValue = Number(amount);
   const rateValue = Number(rate);
+  const samePair = from === to;
   const isDisabled =
-    !(myrAmountValue > 0) || !(rateValue > 0) || mutation.isPending;
+    !(amountValue > 0) || !(rateValue > 0) || samePair || mutation.isPending;
 
   const live = liveRate.data?.rate;
   const rateRatio = live && rateValue > 0 ? rateValue / live : null;
@@ -62,9 +64,9 @@ export function ConversionForm() {
     e.preventDefault();
     if (isDisabled) return;
     mutation.mutate({
-      from_currency: STOPGAP_FROM,
-      to_currency: STOPGAP_TO,
-      from_amount: myrAmountValue,
+      from_currency: from,
+      to_currency: to,
+      from_amount: amountValue,
       rate: rateValue,
       note: note || undefined,
     });
@@ -77,20 +79,36 @@ export function ConversionForm() {
       </CardHeader>
       <CardContent>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label>From</Label>
+              <CurrencySelect value={from} onChange={setFrom} label="From currency" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>To</Label>
+              <CurrencySelect value={to} onChange={setTo} label="To currency" />
+            </div>
+          </div>
+          {samePair && (
+            <p className="flex items-center gap-1.5 text-sm text-caution">
+              <AlertTriangle className="size-4" aria-hidden="true" />
+              From and To currencies must differ.
+            </p>
+          )}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="myr-amount">MYR amount</Label>
+            <Label htmlFor="amount">Amount ({from})</Label>
             <Input
-              id="myr-amount"
+              id="amount"
               type="number"
               min="0"
               step="0.01"
-              value={myrAmount}
-              onChange={(e) => setMyrAmount(e.target.value)}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               placeholder="1000"
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="rate">Rate received (USD per 1 MYR)</Label>
+            <Label htmlFor="rate">Rate received ({to} per 1 {from})</Label>
             <Input
               id="rate"
               type="number"
