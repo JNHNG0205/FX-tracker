@@ -45,6 +45,9 @@ func Migrate(db *gorm.DB) error {
 		_ = m.DropColumn(&model.Conversion{}, "myr_amount")
 		_ = m.DropColumn(&model.Conversion{}, "rate_myr_usd")
 	}
+	if m.HasColumn(&model.Holding{}, "avg_cost_usd") {
+		_ = m.DropColumn(&model.Holding{}, "avg_cost_usd")
+	}
 	return nil
 }
 
