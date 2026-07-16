@@ -54,7 +54,7 @@ export function CurrencySelect({ value, onChange, label }: CurrencySelectProps) 
                 <CommandItem
                   key={currency.code}
                   value={`${currency.code} ${currency.name}`}
-                  onClick={() => {
+                  onSelect={() => {
                     onChange(currency.code);
                     setOpen(false);
                   }}
