@@ -32,7 +32,7 @@ export function RateChart({ points, live, from, to }: RateChartProps) {
     <div role="img" aria-label={summary} className="mt-3">
       <span className="sr-only">{summary}</span>
       <ChartContainer config={config} className="h-40 w-full" aria-hidden="true">
-        <LineChart data={points} margin={{ left: 4, right: 8, top: 8, bottom: 4 }}>
+        <LineChart data={points} margin={{ left: 4, right: 32, top: 16, bottom: 4 }}>
           <CartesianGrid vertical={false} />
           <XAxis dataKey="date" tickFormatter={(d: string) => d.slice(5)} tickMargin={8} minTickGap={24} />
           <YAxis domain={domain} width={52} tickFormatter={(v: number) => v.toFixed(4)} />
@@ -45,7 +45,7 @@ export function RateChart({ points, live, from, to }: RateChartProps) {
               r={4}
               fill="var(--color-foreground)"
               stroke="var(--color-background)"
-              label={{ value: "now", position: "top", fontSize: 10 }}
+              label={{ value: "now", position: "top", fontSize: 10, fill: "var(--color-muted-foreground)", dx: -8 }}
             />
           )}
         </LineChart>
