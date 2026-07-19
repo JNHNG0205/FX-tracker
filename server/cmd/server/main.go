@@ -12,6 +12,7 @@ import (
 	"fx-tracker/internal/config"
 	"fx-tracker/internal/fx"
 	"fx-tracker/internal/handler"
+	"fx-tracker/internal/price"
 	"fx-tracker/internal/repository"
 	"fx-tracker/internal/router"
 	"fx-tracker/internal/service"
@@ -39,7 +40,12 @@ func main() {
 	convService := service.NewConversionService(convRepo)
 	settingsRepo := repository.NewSettingsRepository(db)
 
-	h := handler.New(cache, convService, settingsRepo)
+	priceCache := price.NewCache(httpClient)
+	holdingRepo := repository.NewHoldingRepository(db)
+	holdingService := service.NewHoldingService(holdingRepo)
+	portfolioService := service.NewPortfolioService(holdingRepo, priceCache, convRepo, cache)
+
+	h := handler.New(cache, convService, settingsRepo, holdingService, portfolioService)
 	r := router.New(h)
 
 	srv := &http.Server{Addr: ":" + cfg.Port, Handler: r}
