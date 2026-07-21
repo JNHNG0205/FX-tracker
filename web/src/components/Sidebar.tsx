@@ -75,7 +75,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      <aside className="hidden w-56 shrink-0 border-r bg-background md:block">
+      <aside className="hidden w-56 shrink-0 border-r bg-background md:sticky md:top-0 md:block md:h-screen">
         <SidebarContent />
       </aside>
 

@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { fetchPortfolio } from "@/api/portfolio";
+import { useActivePair } from "@/lib/pair";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export function PortfolioCard() {
-  const { data } = useQuery({ queryKey: ["portfolio"], queryFn: () => fetchPortfolio() });
+  const { home } = useActivePair();
+  const { data } = useQuery({ queryKey: ["portfolio", home], queryFn: () => fetchPortfolio(home) });
 
   const hasHoldings = !!data && data.holdings.length > 0;
 

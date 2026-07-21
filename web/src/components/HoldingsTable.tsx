@@ -22,8 +22,6 @@ type EditDialogProps = {
   holding: PortfolioHoldingResult;
   trigger: React.ReactElement;
   focusManualPrice?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
 };
 
 function EditDialog({ holding, trigger, focusManualPrice }: EditDialogProps) {
@@ -198,7 +196,7 @@ function PriceCell({ holding }: { holding: PortfolioHoldingResult }) {
 
 export function HoldingsTable() {
   const { home } = useActivePair();
-  const { data, isLoading } = useQuery({ queryKey: ["portfolio"], queryFn: () => fetchPortfolio() });
+  const { data, isLoading } = useQuery({ queryKey: ["portfolio", home], queryFn: () => fetchPortfolio(home) });
 
   return (
     <Card className="w-full">
