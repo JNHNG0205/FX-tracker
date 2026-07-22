@@ -9,6 +9,7 @@ export function PortfolioCard() {
   const { data } = useQuery({ queryKey: ["portfolio", home], queryFn: () => fetchPortfolio(home) });
 
   const hasHoldings = !!data && data.holdings.length > 0;
+  const hasCountedHoldings = !!data && data.totals.counted > 0;
 
   return (
     <Card className="w-full">
@@ -18,6 +19,10 @@ export function PortfolioCard() {
       <CardContent>
         {!hasHoldings ? (
           <p className="text-sm text-muted-foreground">Add a holding to see your true return.</p>
+        ) : !hasCountedHoldings ? (
+          <p className="text-sm text-muted-foreground">
+            Log a conversion into your holdings&apos; currencies to see your true return.
+          </p>
         ) : (
           <PortfolioHero
             homeCurrency={data.home_currency}
