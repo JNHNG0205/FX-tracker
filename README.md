@@ -76,7 +76,7 @@ Set a home currency in Settings and track it against any target currency — not
 
 ### Holdings & true return
 
-Add a holding with its ticker, shares, average cost, and the currency it's denominated in. Prices come from Stooq: US tickers resolve automatically via the `.us` suffix; other tickers, and any ticker Stooq can't resolve or fetch, fall back to the `manual_price` you enter on the holding (`price_source` in the API response tells you which was used).
+Add a holding with its ticker, shares, average cost, and the currency it's denominated in. Prices come from Finnhub's free `/quote` API (set `FINNHUB_API_KEY` in `.env`; get a free key at finnhub.io): US tickers are the plain symbol (AAPL, VOO), and intl tickers use Finnhub's own symbol format. Without a key configured, or for a ticker Finnhub can't resolve, the holding falls back to the `manual_price` you enter (`price_source` in the API response tells you which was used).
 
 True return is computed in your home currency and split into two components: your cost, translated at the **blended** rate you actually paid to acquire that currency (from your conversion log), against the current value, translated at the **spot** rate — so the total return breaks down into asset performance (price change in the asset's own currency) and FX effect (movement between your blended rate and today's spot). A holding needs at least one logged conversion from your home currency into its currency before a home-currency figure can be shown; until then it still shows the asset-only return.
 
