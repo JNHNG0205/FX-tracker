@@ -91,8 +91,8 @@ func TestPortfolioServiceCompute(t *testing.T) {
 	if !usd.HomeAvailable {
 		t.Fatalf("expected VOO holding to be HomeAvailable")
 	}
-	if usd.PriceSource != "stooq" {
-		t.Fatalf("expected price source stooq, got %s", usd.PriceSource)
+	if usd.PriceSource != "finnhub" {
+		t.Fatalf("expected price source finnhub, got %s", usd.PriceSource)
 	}
 	wantCost := 10 * 400.0
 	wantValue := 10 * 500.0

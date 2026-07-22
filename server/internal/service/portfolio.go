@@ -71,7 +71,7 @@ func (s *PortfolioService) Compute(ctx context.Context, home string) (portfolio.
 			source = "manual"
 		} else if q, ok := quotes[h.Ticker]; ok && q.Found {
 			p = q.Price
-			source = "stooq"
+			source = "finnhub"
 		} else {
 			p = 0
 			source = "unavailable"

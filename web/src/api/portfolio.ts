@@ -5,7 +5,7 @@ export type PortfolioHoldingResult = {
   shares: number;
   avg_cost: number;
   price: number;
-  price_source: "stooq" | "manual" | "unavailable";
+  price_source: "finnhub" | "manual" | "unavailable";
   cost_c: number;
   value_c: number;
   asset_pnl_pct: number;
