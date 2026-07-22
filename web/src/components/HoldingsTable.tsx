@@ -209,6 +209,7 @@ export function HoldingsTable() {
         ) : !data || data.holdings.length === 0 ? (
           <p className="text-sm text-muted-foreground">No holdings yet.</p>
         ) : (
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -234,17 +235,37 @@ export function HoldingsTable() {
                       <PriceCell holding={h} />
                     </TableCell>
                     <TableCell className="tabular-nums">
-                      {h.value_c.toFixed(2)} {h.currency}
+                      {h.price_source === "unavailable" ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        `${h.value_c.toFixed(2)} ${h.currency}`
+                      )}
                     </TableCell>
-                    <TableCell className={`tabular-nums ${assetPositive ? "text-positive" : "text-negative"}`}>
-                      {assetPositive ? "+" : ""}
-                      {h.asset_pnl_pct.toFixed(2)}%
+                    <TableCell
+                      className={`tabular-nums ${
+                        h.price_source === "unavailable"
+                          ? "text-muted-foreground"
+                          : assetPositive
+                            ? "text-positive"
+                            : "text-negative"
+                      }`}
+                    >
+                      {h.price_source === "unavailable"
+                        ? "—"
+                        : `${assetPositive ? "+" : ""}${h.asset_pnl_pct.toFixed(2)}%`}
                     </TableCell>
                     <TableCell>
                       <HomeReturnCell holding={h} home={home} />
                     </TableCell>
                     <TableCell className="flex justify-end gap-2">
-                      <EditDialog holding={h} trigger={<Button variant="outline" size="sm" />} />
+                      <EditDialog
+                        holding={h}
+                        trigger={
+                          <Button variant="outline" size="sm">
+                            Edit
+                          </Button>
+                        }
+                      />
                       <DeleteButton id={h.id} />
                     </TableCell>
                   </TableRow>
@@ -252,6 +273,7 @@ export function HoldingsTable() {
               })}
             </TableBody>
           </Table>
+          </div>
         )}
       </CardContent>
     </Card>
