@@ -4,7 +4,7 @@ A personal finance tool for a Malaysia-based investor who buys foreign assets (V
 
 ## Status
 
-Under active development. Multi-currency FX checker and conversion log/DCA planner are in place.
+Under active development. FX checker, conversion log/DCA planner, and holdings/true-return tracking are in place. The app is a sidebar app-shell (Convert / Conversions / Holdings); Dividends is stubbed pending Phase 4.
 
 ## Roadmap
 
@@ -57,6 +57,11 @@ All pair endpoints take `from`/`to` query params (ISO currency codes; must be su
 | `PUT /api/conversions/:id` | edit a conversion (validated; 404 if absent) |
 | `DELETE /api/conversions/:id` | delete a conversion (204; 404 if absent) |
 | `GET /api/conversions/status?from=&to=` | per-pair blended average rate + DCA compare vs the live rate |
+| `GET /api/holdings` | manual holdings, newest first |
+| `POST /api/holdings` | add a holding `{ticker, shares, avg_cost, currency, manual_price?}` (shares/avg_cost must be > 0; currency must be supported; manual_price, if given, must be > 0) |
+| `PUT /api/holdings/:id` | edit a holding (validated; 404 if absent) |
+| `DELETE /api/holdings/:id` | delete a holding (204; 404 if absent) |
+| `GET /api/portfolio?home=` | per-holding + aggregate true return in `home` (defaults to your saved home currency): `{home_currency, holdings: [...], totals: {home_cost, home_value, total_return_pct, counted}}` |
 
 ## Notes
 
@@ -68,6 +73,14 @@ All pair endpoints take `from`/`to` query params (ISO currency codes; must be su
 ### Multi-currency
 
 Set a home currency in Settings and track it against any target currency — not just MYR→USD. Roughly 30 fiat currencies are supported via frankfurter.app's ECB cross-rates (no crypto). Live rates and rate context are fetched on demand and cached in memory (live rate ~60s TTL, history ~daily TTL) — no local rate history is stored. The blended average rate and DCA comparison are computed per currency pair, not globally. Existing MYR→USD conversions from before the multi-currency migration were backfilled automatically and need no manual action.
+
+### Holdings & true return
+
+Add a holding with its ticker, shares, average cost, and the currency it's denominated in. Prices come from Stooq: US tickers resolve automatically via the `.us` suffix; other tickers, and any ticker Stooq can't resolve or fetch, fall back to the `manual_price` you enter on the holding (`price_source` in the API response tells you which was used).
+
+True return is computed in your home currency and split into two components: your cost, translated at the **blended** rate you actually paid to acquire that currency (from your conversion log), against the current value, translated at the **spot** rate — so the total return breaks down into asset performance (price change in the asset's own currency) and FX effect (movement between your blended rate and today's spot). A holding needs at least one logged conversion from your home currency into its currency before a home-currency figure can be shown; until then it still shows the asset-only return.
+
+The app is a sidebar app-shell with Convert, Conversions, and Holdings sections; Dividends is stubbed and lands in Phase 4.
 
 ## Tests
 
