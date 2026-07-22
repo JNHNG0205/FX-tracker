@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -29,9 +30,9 @@ func Fetch(ctx context.Context, client *http.Client, base, ticker, currency stri
 	if currency == "USD" {
 		sym += ".us"
 	}
-	url := fmt.Sprintf("%s?s=%s&f=sd2t2ohlcv&h&e=csv", base, sym)
+	reqURL := fmt.Sprintf("%s?s=%s&f=sd2t2ohlcv&h&e=csv", base, url.QueryEscape(sym))
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return Quote{}, err
 	}

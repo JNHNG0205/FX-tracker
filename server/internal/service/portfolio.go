@@ -77,14 +77,20 @@ func (s *PortfolioService) Compute(ctx context.Context, home string) (portfolio.
 			source = "unavailable"
 		}
 
-		var blended float64
-		if rate, _, _, err := s.blended.BlendedRate(ctx, home, h.Currency); err == nil {
-			blended = rate
-		}
-
-		var spot float64
-		if r, err := s.spot.Rate(ctx, home, h.Currency); err == nil {
-			spot = r.Rate
+		var blended, spot float64
+		if home == h.Currency {
+			// Same currency: no conversion happened, so the rate is
+			// trivially 1 and the holding's return is pure asset return
+			// with zero FX component. Skip the blended/spot lookups
+			// entirely — frankfurter.app errors on ?from=X&to=X.
+			blended, spot = 1, 1
+		} else {
+			if rate, _, _, err := s.blended.BlendedRate(ctx, home, h.Currency); err == nil {
+				blended = rate
+			}
+			if r, err := s.spot.Rate(ctx, home, h.Currency); err == nil {
+				spot = r.Rate
+			}
 		}
 
 		results[i] = portfolio.ComputeHolding(h.ID, h.Ticker, h.Currency, h.Shares, h.AvgCost, p, source, blended, spot)

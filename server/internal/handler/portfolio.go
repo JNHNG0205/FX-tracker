@@ -29,7 +29,7 @@ func (h *Handler) Portfolio(c *gin.Context) {
 
 	resp, err := h.portfolio.Compute(c.Request.Context(), home)
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "could not compute portfolio"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not compute portfolio"})
 		return
 	}
 	c.JSON(http.StatusOK, resp)

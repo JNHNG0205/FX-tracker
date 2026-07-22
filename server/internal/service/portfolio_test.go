@@ -122,6 +122,45 @@ func TestPortfolioServiceCompute(t *testing.T) {
 	}
 }
 
+func TestPortfolioServiceComputeSameCurrencyAsHome(t *testing.T) {
+	holdings := []model.Holding{
+		{ID: 1, Ticker: "VOO", Shares: 10, AvgCost: 400, Currency: "USD"},
+	}
+	holdingLister := &fakeHoldingLister{holdings: holdings}
+	prices := &fakePriceSource{quotes: map[string]price.Quote{
+		"VOO": {Ticker: "VOO", Price: 500, Found: true},
+	}}
+	// Deliberately empty: BlendedRate/Rate for USD>USD must never be called
+	// (and would return zero/error if it were), proving the same-currency
+	// shortcut bypasses the lookups entirely.
+	blended := &fakeBlendedSource{rates: map[string]float64{}}
+	spot := &fakeSpotSource{rates: map[string]float64{}}
+
+	svc := NewPortfolioService(holdingLister, prices, blended, spot)
+	resp, err := svc.Compute(context.Background(), "USD")
+	if err != nil {
+		t.Fatalf("Compute() error = %v", err)
+	}
+	if len(resp.Holdings) != 1 {
+		t.Fatalf("expected 1 holding, got %d", len(resp.Holdings))
+	}
+
+	h := resp.Holdings[0]
+	if !h.HomeAvailable {
+		t.Fatalf("expected HomeAvailable true for home==currency holding")
+	}
+	if h.FxPct != 0 {
+		t.Fatalf("expected FxPct = 0, got %v", h.FxPct)
+	}
+	wantPct := (5000.0 - 4000.0) / 4000.0 * 100
+	if diff := h.AssetPnlPct - wantPct; diff > 1e-9 || diff < -1e-9 {
+		t.Fatalf("AssetPnlPct = %v, want %v", h.AssetPnlPct, wantPct)
+	}
+	if diff := h.TotalReturnPct - h.AssetPnlPct; diff > 1e-9 || diff < -1e-9 {
+		t.Fatalf("TotalReturnPct = %v, want equal to AssetPnlPct %v", h.TotalReturnPct, h.AssetPnlPct)
+	}
+}
+
 func TestPortfolioServiceComputeManualPrice(t *testing.T) {
 	manual := 42.0
 	holdings := []model.Holding{
