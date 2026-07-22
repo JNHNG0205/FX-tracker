@@ -9,9 +9,9 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// maxConcurrentFetches bounds how many Stooq requests a single Quotes batch
-// issues at once, so a large holdings list can't fan out unbounded network
-// calls.
+// maxConcurrentFetches bounds how many Finnhub requests a single Quotes
+// batch issues at once, so a large holdings list can't fan out unbounded
+// network calls.
 const maxConcurrentFetches = 6
 
 // Req is one ticker lookup for a Quotes batch. A non-nil Manual short-
@@ -33,7 +33,8 @@ type entry struct {
 // when requested, and then reused until they expire.
 type Cache struct {
 	client *http.Client
-	base   string // test hook; defaults to StooqBase
+	base   string // test hook; defaults to FinnhubBase
+	token  string // Finnhub API key; empty means prices are unavailable
 
 	ttl time.Duration
 	Now func() time.Time // seam for tests
@@ -42,10 +43,11 @@ type Cache struct {
 	entries map[string]entry
 }
 
-func NewCache(client *http.Client) *Cache {
+func NewCache(client *http.Client, token string) *Cache {
 	return &Cache{
 		client:  client,
-		base:    StooqBase,
+		base:    FinnhubBase,
+		token:   token,
 		ttl:     5 * time.Minute,
 		Now:     time.Now,
 		entries: map[string]entry{},
@@ -53,10 +55,17 @@ func NewCache(client *http.Client) *Cache {
 }
 
 // Quote returns the latest price for ticker, fetching it if the cached
-// entry is missing or expired. On a fetch error with a cached entry
-// present, it returns the last-known value rather than propagating the
-// error (stale-on-error).
+// entry is missing or expired. currency is accepted for API stability but
+// no longer affects the lookup — Finnhub symbols don't depend on it. With
+// no API key configured, Quote returns Found:false without touching the
+// network, so holdings fall back to manual pricing. On a fetch error with
+// a cached entry present, it returns the last-known value rather than
+// propagating the error (stale-on-error).
 func (c *Cache) Quote(ctx context.Context, ticker, currency string) (Quote, error) {
+	if c.token == "" {
+		return Quote{Ticker: ticker, Found: false}, nil
+	}
+
 	c.mu.RLock()
 	e, ok := c.entries[ticker]
 	c.mu.RUnlock()
@@ -64,7 +73,7 @@ func (c *Cache) Quote(ctx context.Context, ticker, currency string) (Quote, erro
 		return e.quote, nil
 	}
 
-	q, err := Fetch(ctx, c.client, c.base, ticker, currency) // outside the lock
+	q, err := Fetch(ctx, c.client, c.base, c.token, ticker) // outside the lock
 	if err != nil {
 		if ok {
 			return e.quote, nil

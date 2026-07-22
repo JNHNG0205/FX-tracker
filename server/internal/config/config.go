@@ -10,16 +10,18 @@ import (
 )
 
 type Config struct {
-	DatabaseURL string
-	Port        string
-	FxBaseURL   string
+	DatabaseURL   string
+	Port          string
+	FxBaseURL     string
+	FinnhubAPIKey string
 }
 
 func Load() Config {
 	return Config{
-		DatabaseURL: env("DATABASE_URL", "postgres://fx:fx@localhost:5432/fxtracker?sslmode=disable"),
-		Port:        env("PORT", "8080"),
-		FxBaseURL:   env("FX_BASE_URL", "https://api.frankfurter.app"),
+		DatabaseURL:   env("DATABASE_URL", "postgres://fx:fx@localhost:5432/fxtracker?sslmode=disable"),
+		Port:          env("PORT", "8080"),
+		FxBaseURL:     env("FX_BASE_URL", "https://api.frankfurter.app"),
+		FinnhubAPIKey: env("FINNHUB_API_KEY", ""),
 	}
 }
 

@@ -16,20 +16,20 @@ func TestFetch(t *testing.T) {
 		wantPrice float64
 		wantErr   bool
 	}{
-		{"ok", "Symbol,Date,Time,Open,High,Low,Close,Volume\nVOO.US,2026-07-16,22:00:00,500,562,499,560.12,1000\n", true, 560.12, false},
-		{"no data", "Symbol,Date,Time,Open,High,Low,Close,Volume\nZZZ.US,N/D,N/D,N/D,N/D,N/D,N/D,N/D\n", false, 0, false},
+		{"ok", `{"c":560.12,"h":562,"l":499,"o":500,"pc":555,"t":1753500000}`, true, 560.12, false},
+		{"no data", `{"c":0,"h":0,"l":0,"o":0,"pc":0,"t":0}`, false, 0, false},
 		{"malformed", "garbage", false, 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if !strings.Contains(r.URL.RawQuery, "s=voo.us") && tt.name == "ok" {
-					t.Errorf("symbol not lowercased+.us: %s", r.URL.RawQuery)
+				if tt.name == "ok" && !strings.Contains(r.URL.RawQuery, "symbol=VOO") {
+					t.Errorf("symbol not uppercased: %s", r.URL.RawQuery)
 				}
 				_, _ = w.Write([]byte(tt.body))
 			}))
 			defer srv.Close()
-			q, err := Fetch(context.Background(), srv.Client(), srv.URL, "VOO", "USD")
+			q, err := Fetch(context.Background(), srv.Client(), srv.URL, "testtoken", "voo")
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("want err")
@@ -52,7 +52,7 @@ func TestFetchNon200(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	_, err := Fetch(context.Background(), srv.Client(), srv.URL, "VOO", "USD")
+	_, err := Fetch(context.Background(), srv.Client(), srv.URL, "testtoken", "VOO")
 	if err == nil {
 		t.Fatal("want err for non-200 response")
 	}

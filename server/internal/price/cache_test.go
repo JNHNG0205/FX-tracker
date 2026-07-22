@@ -12,15 +12,15 @@ import (
 
 func TestQuotesPartialFailure(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.Contains(r.URL.RawQuery, "s=bad.us") {
+		if strings.Contains(r.URL.RawQuery, "symbol=BAD") {
 			w.WriteHeader(500)
 			return
 		}
-		_, _ = w.Write([]byte("Symbol,Date,Time,Open,High,Low,Close,Volume\nX,2026-07-16,22:00:00,1,1,1,42,1\n"))
+		_, _ = w.Write([]byte(`{"c":42}`))
 	}))
 	defer srv.Close()
-	c := NewCache(srv.Client())
-	c.base = srv.URL // test hook for the Stooq base
+	c := NewCache(srv.Client(), "testtoken")
+	c.base = srv.URL // test hook for the Finnhub base
 	man := 99.0
 	got := c.Quotes(context.Background(), []Req{
 		{Ticker: "VOO", Currency: "USD"},
@@ -42,10 +42,10 @@ func TestCacheQuotePerTickerAndTTL(t *testing.T) {
 	var calls int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(&calls, 1)
-		_, _ = w.Write([]byte("Symbol,Date,Time,Open,High,Low,Close,Volume\nX,2026-07-16,22:00:00,1,1,1,42,1\n"))
+		_, _ = w.Write([]byte(`{"c":42}`))
 	}))
 	defer srv.Close()
-	c := NewCache(srv.Client())
+	c := NewCache(srv.Client(), "testtoken")
 	c.base = srv.URL
 
 	q1, err := c.Quote(context.Background(), "VOO", "USD")
@@ -71,13 +71,13 @@ func TestCacheQuoteStaleOnError(t *testing.T) {
 	var calls int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if atomic.AddInt32(&calls, 1) == 1 {
-			_, _ = w.Write([]byte("Symbol,Date,Time,Open,High,Low,Close,Volume\nX,2026-07-16,22:00:00,1,1,1,42,1\n"))
+			_, _ = w.Write([]byte(`{"c":42}`))
 			return
 		}
 		w.WriteHeader(500)
 	}))
 	defer srv.Close()
-	c := NewCache(srv.Client())
+	c := NewCache(srv.Client(), "testtoken")
 	c.base = srv.URL
 	c.ttl = 0 // force re-fetch
 
@@ -99,11 +99,11 @@ func TestCacheQuotesConcurrentAccess(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		_, _ = w.Write([]byte("Symbol,Date,Time,Open,High,Low,Close,Volume\nX,2026-07-16,22:00:00,1,1,1,42,1\n"))
+		_, _ = w.Write([]byte(`{"c":42}`))
 	}))
 	defer srv.Close()
 
-	c := NewCache(srv.Client())
+	c := NewCache(srv.Client(), "testtoken")
 	c.base = srv.URL
 	c.ttl = time.Millisecond
 
@@ -115,5 +115,23 @@ func TestCacheQuotesConcurrentAccess(t *testing.T) {
 			reqs[j] = Req{Ticker: t, Currency: "USD"}
 		}
 		_ = c.Quotes(context.Background(), reqs)
+	}
+}
+
+func TestCacheQuoteNoTokenSkipsNetwork(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("no network call expected with an empty token")
+	}))
+	defer srv.Close()
+
+	c := NewCache(srv.Client(), "")
+	c.base = srv.URL
+
+	got, err := c.Quote(context.Background(), "VOO", "USD")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Found {
+		t.Fatalf("expected Found:false with no token, got %+v", got)
 	}
 }

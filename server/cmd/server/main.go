@@ -40,7 +40,7 @@ func main() {
 	convService := service.NewConversionService(convRepo)
 	settingsRepo := repository.NewSettingsRepository(db)
 
-	priceCache := price.NewCache(httpClient)
+	priceCache := price.NewCache(httpClient, cfg.FinnhubAPIKey)
 	holdingRepo := repository.NewHoldingRepository(db)
 	holdingService := service.NewHoldingService(holdingRepo)
 	portfolioService := service.NewPortfolioService(holdingRepo, priceCache, convRepo, cache)
