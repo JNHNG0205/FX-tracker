@@ -30,5 +30,12 @@ func New(h *handler.Handler) *gin.Engine {
 
 	r.GET("/api/settings", h.GetSettings)
 	r.PUT("/api/settings", h.UpdateSettings)
+
+	r.POST("/api/holdings", h.CreateHolding)
+	r.GET("/api/holdings", h.ListHoldings)
+	r.PUT("/api/holdings/:id", h.UpdateHolding)
+	r.DELETE("/api/holdings/:id", h.DeleteHolding)
+
+	r.GET("/api/portfolio", h.Portfolio)
 	return r
 }

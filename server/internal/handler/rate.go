@@ -12,13 +12,15 @@ import (
 )
 
 type Handler struct {
-	cache    *fx.Cache
-	conv     *service.ConversionService
-	settings repository.SettingsRepository
+	cache     *fx.Cache
+	conv      *service.ConversionService
+	settings  repository.SettingsRepository
+	holdings  *service.HoldingService
+	portfolio *service.PortfolioService
 }
 
-func New(cache *fx.Cache, conv *service.ConversionService, settings repository.SettingsRepository) *Handler {
-	return &Handler{cache: cache, conv: conv, settings: settings}
+func New(cache *fx.Cache, conv *service.ConversionService, settings repository.SettingsRepository, holdings *service.HoldingService, portfolio *service.PortfolioService) *Handler {
+	return &Handler{cache: cache, conv: conv, settings: settings, holdings: holdings, portfolio: portfolio}
 }
 
 // pairParams reads/validates the from/to query params shared by rate and

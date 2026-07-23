@@ -1,7 +1,9 @@
 package config
 
 import (
+	"bufio"
 	"os"
+	"strings"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -10,16 +12,47 @@ import (
 )
 
 type Config struct {
-	DatabaseURL string
-	Port        string
-	FxBaseURL   string
+	DatabaseURL   string
+	Port          string
+	FxBaseURL     string
+	FinnhubAPIKey string
 }
 
 func Load() Config {
+	// Load a local .env into the process env if present. Real environment
+	// variables always win, so this only fills what isn't already set.
+	loadDotEnv(".env")
 	return Config{
-		DatabaseURL: env("DATABASE_URL", "postgres://fx:fx@localhost:5432/fxtracker?sslmode=disable"),
-		Port:        env("PORT", "8080"),
-		FxBaseURL:   env("FX_BASE_URL", "https://api.frankfurter.app"),
+		DatabaseURL:   env("DATABASE_URL", "postgres://fx:fx@localhost:5432/fxtracker?sslmode=disable"),
+		Port:          env("PORT", "8080"),
+		FxBaseURL:     env("FX_BASE_URL", "https://api.frankfurter.app"),
+		FinnhubAPIKey: env("FINNHUB_API_KEY", ""),
+	}
+}
+
+// loadDotEnv reads KEY=VALUE lines from path and sets any that aren't already
+// present in the environment. A missing file is not an error.
+func loadDotEnv(path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		line := strings.TrimSpace(sc.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, val, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		val = strings.Trim(strings.TrimSpace(val), `"'`)
+		if key != "" && os.Getenv(key) == "" {
+			_ = os.Setenv(key, val)
+		}
 	}
 }
 
@@ -44,6 +77,9 @@ func Migrate(db *gorm.DB) error {
 		}
 		_ = m.DropColumn(&model.Conversion{}, "myr_amount")
 		_ = m.DropColumn(&model.Conversion{}, "rate_myr_usd")
+	}
+	if m.HasColumn(&model.Holding{}, "avg_cost_usd") {
+		_ = m.DropColumn(&model.Holding{}, "avg_cost_usd")
 	}
 	return nil
 }

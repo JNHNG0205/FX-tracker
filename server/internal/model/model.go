@@ -17,11 +17,13 @@ type Conversion struct {
 }
 
 type Holding struct {
-	ID         uint      `gorm:"primaryKey" json:"id"`
-	Ticker     string    `json:"ticker"`
-	Shares     float64   `json:"shares"`
-	AvgCostUsd float64   `json:"avg_cost_usd"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	Ticker      string    `json:"ticker"`
+	Shares      float64   `json:"shares"`
+	AvgCost     float64   `json:"avg_cost"`
+	Currency    string    `json:"currency"`
+	ManualPrice *float64  `json:"manual_price,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // Setting is a single-row table (fixed ID 1) holding app-wide preferences,
