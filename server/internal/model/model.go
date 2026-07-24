@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 // Conversion records a home-currency → target-currency exchange. Rate is
 // target units per 1 home unit, e.g. FromCurrency=MYR, ToCurrency=USD,
@@ -31,4 +35,14 @@ type Holding struct {
 type Setting struct {
 	ID           uint   `gorm:"primaryKey" json:"id"`
 	HomeCurrency string `json:"home_currency"`
+}
+
+type Dividend struct {
+	ID        uint            `gorm:"primaryKey" json:"id"`
+	Ticker    string          `json:"ticker"`
+	Currency  string          `json:"currency"`
+	Amount    decimal.Decimal `gorm:"type:numeric" json:"amount"` // gross, in Currency
+	Date      time.Time       `json:"date"`
+	Note      string          `json:"note"`
+	CreatedAt time.Time       `json:"created_at"`
 }
