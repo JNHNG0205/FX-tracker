@@ -23,7 +23,7 @@ func testDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("connect test db (is Postgres up and fxtracker_test created?): %v", err)
 	}
-	if err := db.AutoMigrate(&model.Conversion{}, &model.Setting{}, &model.Holding{}); err != nil {
+	if err := db.AutoMigrate(&model.Conversion{}, &model.Setting{}, &model.Holding{}, &model.Dividend{}); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
 	if err := db.Exec("TRUNCATE conversions RESTART IDENTITY").Error; err != nil {
@@ -33,6 +33,9 @@ func testDB(t *testing.T) *gorm.DB {
 		t.Fatalf("truncate: %v", err)
 	}
 	if err := db.Exec("TRUNCATE holdings RESTART IDENTITY").Error; err != nil {
+		t.Fatalf("truncate: %v", err)
+	}
+	if err := db.Exec("TRUNCATE dividends RESTART IDENTITY").Error; err != nil {
 		t.Fatalf("truncate: %v", err)
 	}
 	return db
