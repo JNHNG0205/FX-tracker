@@ -45,7 +45,10 @@ func main() {
 	holdingService := service.NewHoldingService(holdingRepo)
 	portfolioService := service.NewPortfolioService(holdingRepo, priceCache, convRepo, cache)
 
-	h := handler.New(cache, convService, settingsRepo, holdingService, portfolioService)
+	dividendRepo := repository.NewDividendRepository(db)
+	dividendService := service.NewDividendService(dividendRepo, cache)
+
+	h := handler.New(cache, convService, settingsRepo, holdingService, portfolioService, dividendService)
 	r := router.New(h)
 
 	srv := &http.Server{Addr: ":" + cfg.Port, Handler: r}

@@ -17,10 +17,11 @@ type Handler struct {
 	settings  repository.SettingsRepository
 	holdings  *service.HoldingService
 	portfolio *service.PortfolioService
+	dividends *service.DividendService
 }
 
-func New(cache *fx.Cache, conv *service.ConversionService, settings repository.SettingsRepository, holdings *service.HoldingService, portfolio *service.PortfolioService) *Handler {
-	return &Handler{cache: cache, conv: conv, settings: settings, holdings: holdings, portfolio: portfolio}
+func New(cache *fx.Cache, conv *service.ConversionService, settings repository.SettingsRepository, holdings *service.HoldingService, portfolio *service.PortfolioService, dividends *service.DividendService) *Handler {
+	return &Handler{cache: cache, conv: conv, settings: settings, holdings: holdings, portfolio: portfolio, dividends: dividends}
 }
 
 // pairParams reads/validates the from/to query params shared by rate and
