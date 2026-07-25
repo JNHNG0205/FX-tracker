@@ -33,15 +33,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <NavLink to="/holdings" className={navLinkClassName} onClick={onNavigate}>
           Holdings
         </NavLink>
-        <span
-          aria-disabled="true"
-          className="flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-muted-foreground/50"
-        >
+        <NavLink to="/dividends" className={navLinkClassName} onClick={onNavigate}>
           Dividends
-          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Soon
-          </span>
-        </span>
+        </NavLink>
       </nav>
 
       <div className="mt-auto">
