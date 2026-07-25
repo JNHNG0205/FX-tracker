@@ -77,11 +77,11 @@ func TestDividendServiceSummary(t *testing.T) {
 	if usd.Ticker != "VOO" {
 		t.Fatalf("expected first dividend VOO, got %s", usd.Ticker)
 	}
-	if usd.Withholding != "30" {
-		t.Fatalf("Withholding = %s, want 30", usd.Withholding)
+	if usd.Withholding != "30.00" {
+		t.Fatalf("Withholding = %s, want 30.00", usd.Withholding)
 	}
-	if usd.Net != "70" {
-		t.Fatalf("Net = %s, want 70", usd.Net)
+	if usd.Net != "70.00" {
+		t.Fatalf("Net = %s, want 70.00", usd.Net)
 	}
 	if !usd.HomeAvailable {
 		t.Fatalf("expected VOO HomeAvailable true")
@@ -95,8 +95,8 @@ func TestDividendServiceSummary(t *testing.T) {
 	}
 
 	eur := summary.Dividends[1]
-	if eur.Withholding != "0" {
-		t.Fatalf("Withholding = %s, want 0", eur.Withholding)
+	if eur.Withholding != "0.00" {
+		t.Fatalf("Withholding = %s, want 0.00", eur.Withholding)
 	}
 	if eur.HomeAvailable {
 		t.Fatalf("expected EUR dividend HomeAvailable false (spot error)")
@@ -120,13 +120,13 @@ func TestDividendServiceSummary(t *testing.T) {
 	for _, ct := range summary.Totals.ByCurrency {
 		byCurrency[ct.Currency] = ct
 	}
-	if byCurrency["USD"].Gross != "100" || byCurrency["USD"].Withholding != "30" || byCurrency["USD"].Net != "70" {
+	if byCurrency["USD"].Gross != "100.00" || byCurrency["USD"].Withholding != "30.00" || byCurrency["USD"].Net != "70.00" {
 		t.Fatalf("USD total = %+v", byCurrency["USD"])
 	}
-	if byCurrency["EUR"].Gross != "50" || byCurrency["EUR"].Withholding != "0" || byCurrency["EUR"].Net != "50" {
+	if byCurrency["EUR"].Gross != "50.00" || byCurrency["EUR"].Withholding != "0.00" || byCurrency["EUR"].Net != "50.00" {
 		t.Fatalf("EUR total = %+v", byCurrency["EUR"])
 	}
-	if byCurrency["MYR"].Gross != "20" {
+	if byCurrency["MYR"].Gross != "20.00" {
 		t.Fatalf("MYR total = %+v", byCurrency["MYR"])
 	}
 

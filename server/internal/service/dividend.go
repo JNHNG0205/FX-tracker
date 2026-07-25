@@ -123,9 +123,9 @@ func (s *DividendService) Summary(ctx context.Context, home string) (DividendSum
 			Currency:      d.Currency,
 			Date:          d.Date.Format("2006-01-02"),
 			Note:          d.Note,
-			Amount:        d.Amount.String(),
-			Withholding:   w.String(),
-			Net:           n.String(),
+			Amount:        d.Amount.StringFixed(2),
+			Withholding:   w.StringFixed(2),
+			Net:           n.StringFixed(2),
 			HomeNet:       homeNet,
 			HomeAvailable: available,
 		}
@@ -146,9 +146,9 @@ func (s *DividendService) Summary(ctx context.Context, home string) (DividendSum
 		acc := accs[cur]
 		byCurrency[i] = CurrencyTotal{
 			Currency:    acc.currency,
-			Gross:       acc.gross.String(),
-			Withholding: acc.withholding.String(),
-			Net:         acc.net.String(),
+			Gross:       acc.gross.StringFixed(2),
+			Withholding: acc.withholding.StringFixed(2),
+			Net:         acc.net.StringFixed(2),
 		}
 	}
 
