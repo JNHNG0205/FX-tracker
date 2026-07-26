@@ -4,14 +4,14 @@ A personal finance tool for a Malaysia-based investor who buys foreign assets (V
 
 ## Status
 
-Under active development. FX checker, conversion log/DCA planner, and holdings/true-return tracking are in place. The app is a sidebar app-shell (Convert / Conversions / Holdings); Dividends is stubbed pending Phase 4.
+Under active development. FX checker, conversion log/DCA planner, holdings/true-return tracking, and the dividend + withholding tracker are in place. The app is a sidebar app-shell (Convert / Conversions / Holdings / Dividends).
 
 ## Roadmap
 
 - **Phase 0–1 — FX checker.** Live mid-market rate between a home currency and any target currency, with a good/middling/poor assessment based on the recent range. Auto-refreshing, with graceful degradation to the last-known rate.
 - **Phase 2 — Conversion log + DCA planner.** Log conversions between any currency pair, compute a per-pair blended average rate, and compare today's rate against it.
 - **Phase 3 — True-return tracker.** Manual holdings, live prices, and real return translated to your home currency using your blended conversion rate — not spot.
-- **Phase 4 — Dividend + withholding tracker.** Projected dividends with the 30% US withholding tax applied for Malaysian residents.
+- **Phase 4 — Dividend + withholding tracker.** Logged dividends with the 30% US withholding tax applied for Malaysian residents.
 
 ## Tech Stack
 
@@ -62,12 +62,16 @@ All pair endpoints take `from`/`to` query params (ISO currency codes; must be su
 | `PUT /api/holdings/:id` | edit a holding (validated; 404 if absent) |
 | `DELETE /api/holdings/:id` | delete a holding (204; 404 if absent) |
 | `GET /api/portfolio?home=` | per-holding + aggregate true return in `home` (defaults to your saved home currency): `{home_currency, holdings: [...], totals: {home_cost, home_value, total_return_pct, counted}}` |
+| `POST /api/dividends` | log a dividend `{ticker, currency, amount, date?, note?}` (currency must be supported; amount must be > 0; date defaults to today) |
+| `GET /api/dividends?home=` | dividend + withholding summary in `home` (defaults to your saved home currency): `{home_currency, dividends: [...], totals: {by_currency, home_net}}` |
+| `PUT /api/dividends/:id` | edit a dividend (validated; 404 if absent) |
+| `DELETE /api/dividends/:id` | delete a dividend (204; 404 if absent) |
 
 ## Notes
 
 - Rates are mid-market; Moomoo's real quote includes a spread and is slightly worse.
 - The assessment ranks today's rate against frankfurter's historical daily series (business days only), fetched live per timeframe — no local rate history is stored.
-- Money is stored as float for display this phase; Phase 4 tax math will use a decimal type.
+- FX rates and holdings money are stored as float for display; dividend/withholding tax math (Phase 4) uses an exact decimal type end-to-end, with only the home-currency approximation crossing back into float via the display-only spot rate.
 - The FX card shows a chart of the active pair over the selected timeframe (frankfurter daily closes) with the live rate marked; conversions can be edited or deleted from the history table.
 
 ### Multi-currency
@@ -80,7 +84,9 @@ Add a holding with its ticker, shares, average cost, and the currency it's denom
 
 True return is computed in your home currency and split into two components: your cost, translated at the **blended** rate you actually paid to acquire that currency (from your conversion log), against the current value, translated at the **spot** rate — so the total return breaks down into asset performance (price change in the asset's own currency) and FX effect (movement between your blended rate and today's spot). A holding needs at least one logged conversion from your home currency into its currency before a home-currency figure can be shown; until then it still shows the asset-only return.
 
-The app is a sidebar app-shell with Convert, Conversions, and Holdings sections; Dividends is stubbed and lands in Phase 4.
+### Dividends & withholding
+
+Log a dividend with its ticker, currency, gross amount, and date. Every dividend held in USD is taxed at a flat **30% US withholding rate**; all other currencies are taxed at **0%** (no other treaty rates are modeled yet). Gross, withholding, and net are shown in the dividend's own currency, plus a home-currency approximation (`home_net`) converted at today's spot rate for each entry, summed across entries where a spot rate was available. The withholding/net math (`internal/dividend.Withhold`) uses exact decimal arithmetic throughout, not float — only the home-currency approximation uses the (display-only) float spot rate.
 
 ## Tests
 
