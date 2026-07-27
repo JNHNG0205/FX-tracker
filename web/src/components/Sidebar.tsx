@@ -20,7 +20,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     <div className="flex h-full flex-col gap-6 p-4">
       <div className="flex items-center gap-2 px-2 pt-2">
         <ArrowLeftRight className="size-5 text-primary" aria-hidden="true" />
-        <span className="text-lg font-bold tracking-tight">FX Tracker</span>
+        <span className="text-lg font-bold tracking-tight">Anchor</span>
       </div>
 
       <nav className="flex flex-col gap-1" aria-label="Main navigation">
@@ -62,7 +62,7 @@ export function Sidebar() {
       <div className="flex items-center justify-between border-b bg-background px-4 py-3 md:hidden">
         <div className="flex items-center gap-2">
           <ArrowLeftRight className="size-5 text-primary" aria-hidden="true" />
-          <span className="text-base font-bold tracking-tight">FX Tracker</span>
+          <span className="text-base font-bold tracking-tight">Anchor</span>
         </div>
         <button
           type="button"

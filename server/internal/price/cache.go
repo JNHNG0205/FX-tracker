@@ -60,7 +60,9 @@ func NewCache(client *http.Client, token string) *Cache {
 // no API key configured, Quote returns Found:false without touching the
 // network, so holdings fall back to manual pricing. On a fetch error with
 // a cached entry present, it returns the last-known value rather than
-// propagating the error (stale-on-error).
+// propagating the error (stale-on-error). Only successful (Found) quotes
+// are cached, so a not-found ticker is retried on the next call instead of
+// sticking for the full TTL.
 func (c *Cache) Quote(ctx context.Context, ticker, currency string) (Quote, error) {
 	if c.token == "" {
 		return Quote{Ticker: ticker, Found: false}, nil
@@ -81,9 +83,11 @@ func (c *Cache) Quote(ctx context.Context, ticker, currency string) (Quote, erro
 		return Quote{}, err
 	}
 
-	c.mu.Lock()
-	c.entries[ticker] = entry{quote: q, at: c.Now()}
-	c.mu.Unlock()
+	if q.Found {
+		c.mu.Lock()
+		c.entries[ticker] = entry{quote: q, at: c.Now()}
+		c.mu.Unlock()
+	}
 	return q, nil
 }
 

@@ -1,4 +1,4 @@
-# FX Tracker
+# Anchor
 
 A personal finance tool for a Malaysia-based investor who buys foreign assets (VOO, US stocks) through Moomoo, funding in a home currency. It covers the layer broker apps ignore: **FX + tax**.
 

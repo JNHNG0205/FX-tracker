@@ -91,6 +91,41 @@ func TestCacheQuoteStaleOnError(t *testing.T) {
 	}
 }
 
+func TestCacheQuoteNotFoundNotCached(t *testing.T) {
+	var calls int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+		_, _ = w.Write([]byte(`{"c":0}`))
+	}))
+	defer srv.Close()
+	c := NewCache(srv.Client(), "testtoken")
+	c.base = srv.URL
+
+	q1, err := c.Quote(context.Background(), "MISSING", "USD")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if q1.Found {
+		t.Fatalf("expected not-found, got %+v", q1)
+	}
+	if atomic.LoadInt32(&calls) != 1 {
+		t.Fatalf("expected 1 upstream call, got %d", calls)
+	}
+
+	// a not-found result must not be cached, so the next call re-fetches
+	// instead of sticking for the full TTL.
+	q2, err := c.Quote(context.Background(), "MISSING", "USD")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if q2.Found {
+		t.Fatalf("expected not-found, got %+v", q2)
+	}
+	if atomic.LoadInt32(&calls) != 2 {
+		t.Fatalf("expected 2 upstream calls (self-heal retry), got %d", calls)
+	}
+}
+
 func TestCacheQuotesConcurrentAccess(t *testing.T) {
 	var calls atomic.Int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
