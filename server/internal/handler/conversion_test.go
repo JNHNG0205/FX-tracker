@@ -93,7 +93,7 @@ func (f *fakeSettingsRepo) SetHomeCurrency(ctx context.Context, code string) err
 func newConvHandler(t *testing.T) *Handler {
 	t.Helper()
 	svc := service.NewConversionService(&memRepo{})
-	return New(newLiveCache(t), svc, newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t))
+	return New(newLiveCache(t), svc, newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t), dividendSvcForTest(t))
 }
 
 func TestCreateConversionValidation(t *testing.T) {
@@ -151,7 +151,7 @@ func TestConversionStatus(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	repo := &memRepo{}
 	repo.items = []model.Conversion{{ID: 1, FromCurrency: "MYR", ToCurrency: "USD", FromAmount: 1000, Rate: 0.2}}
-	h := New(newLiveCache(t), service.NewConversionService(repo), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t))
+	h := New(newLiveCache(t), service.NewConversionService(repo), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t), dividendSvcForTest(t))
 	r := gin.New()
 	r.GET("/api/conversions/status", h.ConversionStatus)
 
@@ -180,7 +180,7 @@ func TestUpdateConversion(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	repo := &memRepo{}
 	repo.items = []model.Conversion{{ID: 1, FromCurrency: "MYR", ToCurrency: "USD", FromAmount: 100, Rate: 0.2, Note: "a"}}
-	h := New(newLiveCache(t), service.NewConversionService(repo), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t))
+	h := New(newLiveCache(t), service.NewConversionService(repo), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t), dividendSvcForTest(t))
 	r := gin.New()
 	r.PUT("/api/conversions/:id", h.UpdateConversion)
 
@@ -218,7 +218,7 @@ func TestDeleteConversion(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	repo := &memRepo{}
 	repo.items = []model.Conversion{{ID: 1, FromCurrency: "MYR", ToCurrency: "USD", FromAmount: 100, Rate: 0.2}}
-	h := New(newLiveCache(t), service.NewConversionService(repo), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t))
+	h := New(newLiveCache(t), service.NewConversionService(repo), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t), dividendSvcForTest(t))
 	r := gin.New()
 	r.DELETE("/api/conversions/:id", h.DeleteConversion)
 

@@ -38,7 +38,7 @@ func newTestSettings() *fakeSettingsRepo {
 func TestHealth(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t))
+	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t), dividendSvcForTest(t))
 	r.GET("/health", h.Health)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/health", nil))
@@ -50,7 +50,7 @@ func TestHealth(t *testing.T) {
 func TestRate(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t))
+	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t), dividendSvcForTest(t))
 	r.GET("/api/rate", h.Rate)
 
 	w := httptest.NewRecorder()
@@ -84,7 +84,7 @@ func TestRate(t *testing.T) {
 func TestRateContext(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t))
+	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t), dividendSvcForTest(t))
 	r.GET("/api/rate/context", h.RateContext)
 
 	w := httptest.NewRecorder()
@@ -110,7 +110,7 @@ func TestRateContext(t *testing.T) {
 func TestRateHistory(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t))
+	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdingsSvcForTest(t), portfolioSvcForTest(t), dividendSvcForTest(t))
 	r.GET("/api/rate/history", h.RateHistory)
 
 	w := httptest.NewRecorder()

@@ -66,7 +66,7 @@ func Connect(cfg Config) (*gorm.DB, error) {
 // fresh DB (no old columns) and idempotent (re-running does nothing, since
 // the old columns are dropped after the one-time backfill).
 func Migrate(db *gorm.DB) error {
-	if err := db.AutoMigrate(&model.Conversion{}, &model.Holding{}, &model.Setting{}); err != nil {
+	if err := db.AutoMigrate(&model.Conversion{}, &model.Holding{}, &model.Setting{}, &model.Dividend{}); err != nil {
 		return err
 	}
 

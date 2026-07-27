@@ -20,7 +20,7 @@ func TestPortfolioHomeFromQuery(t *testing.T) {
 	}}
 	holdings := service.NewHoldingService(repo)
 	portfolioSvc := service.NewPortfolioService(repo, fakePriceSource{}, &memRepo{}, newLiveCache(t))
-	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdings, portfolioSvc)
+	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdings, portfolioSvc, dividendSvcForTest(t))
 
 	r := gin.New()
 	r.GET("/api/portfolio", h.Portfolio)
@@ -55,7 +55,7 @@ func TestPortfolioHomeFromSettings(t *testing.T) {
 	holdings := service.NewHoldingService(repo)
 	portfolioSvc := service.NewPortfolioService(repo, fakePriceSource{}, &memRepo{}, newLiveCache(t))
 	settings := &fakeSettingsRepo{code: "SGD"}
-	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), settings, holdings, portfolioSvc)
+	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), settings, holdings, portfolioSvc, dividendSvcForTest(t))
 
 	r := gin.New()
 	r.GET("/api/portfolio", h.Portfolio)

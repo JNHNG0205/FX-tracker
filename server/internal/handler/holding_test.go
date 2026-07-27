@@ -98,7 +98,7 @@ func portfolioSvcForTest(t *testing.T) *service.PortfolioService {
 func newHoldingHandler(t *testing.T) *Handler {
 	t.Helper()
 	holdings, portfolio := newHoldingsAndPortfolio(t)
-	return New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdings, portfolio)
+	return New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdings, portfolio, dividendSvcForTest(t))
 }
 
 func TestCreateHoldingValidation(t *testing.T) {
@@ -156,7 +156,7 @@ func TestCreateAndListHolding(t *testing.T) {
 func TestUpdateHolding(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	holdings, portfolio := newHoldingsAndPortfolio(t)
-	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdings, portfolio)
+	h := New(newLiveCache(t), service.NewConversionService(&memRepo{}), newTestSettings(), holdings, portfolio, dividendSvcForTest(t))
 	r := gin.New()
 	r.POST("/api/holdings", h.CreateHolding)
 	r.PUT("/api/holdings/:id", h.UpdateHolding)

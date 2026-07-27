@@ -37,5 +37,10 @@ func New(h *handler.Handler) *gin.Engine {
 	r.DELETE("/api/holdings/:id", h.DeleteHolding)
 
 	r.GET("/api/portfolio", h.Portfolio)
+
+	r.POST("/api/dividends", h.CreateDividend)
+	r.GET("/api/dividends", h.ListDividends)
+	r.PUT("/api/dividends/:id", h.UpdateDividend)
+	r.DELETE("/api/dividends/:id", h.DeleteDividend)
 	return r
 }
